@@ -1,0 +1,15 @@
+{"user_id": "U001", "timestamp": "2026-01-15T10:00:00", "page": "/home", "action": "view", "session_id": "S001"}
+{"user_id": "U001", "timestamp": "2026-01-15T10:01:30", "page": "/products", "action": "view", "session_id": "S001"}
+{"user_id": "U001", "timestamp": "2026-01-15T10:03:00", "page": "/products/laptop", "action": "view", "session_id": "S001"}
+{"user_id": "U001", "timestamp": "2026-01-15T10:05:00", "page": "/cart", "action": "add", "session_id": "S001"}
+{"user_id": "U002", "timestamp": "2026-01-15T10:02:00", "page": "/home", "action": "view", "session_id": "S002"}
+{"user_id": "U002", "timestamp": "2026-01-15T10:03:00", "page": "/about", "action": "view", "session_id": "S002"}
+{"user_id": "U003", "timestamp": "2026-01-15T10:04:00", "page": "/home", "action": "view", "session_id": "S003"}
+{"user_id": "U003", "timestamp": "2026-01-15T10:05:00", "page": "/products", "action": "view", "session_id": "S003"}
+{"user_id": "U003", "timestamp": "2026-01-15T10:06:00", "page": "/products/mouse", "action": "view", "session_id": "S003"}
+{"user_id": "U003", "timestamp": "2026-01-15T10:07:00", "page": "/products/keyboard", "action": "view", "session_id": "S003"}
+{"user_id": "U001", "timestamp": "2026-01-15T11:00:00", "page": "/home", "action": "view", "session_id": "S004"}
+{"user_id": "U001", "timestamp": "2026-01-15T11:02:00", "page": "/orders", "action": "view", "session_id": "S004"}
+{"user_id": "U004", "timestamp": "2026-01-15T11:05:00", "page": "/home", "action": "view", "session_id": "S005"}
+{"user_id": "U004", "timestamp": "2026-01-15T11:06:00", "page": "/products", "action": "view", "session_id": "S005"}
+{"user_id": "U002", "timestamp": "2026-01-15T12:00:00", "page": "/home", "action": "view", "session_id": "S006"}

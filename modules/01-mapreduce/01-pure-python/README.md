@@ -4,6 +4,13 @@
 
 Learn MapReduce from the ground up with pure Python implementations. This module is organized in three progressive levels, each building on the previous one.
 
+## Quick Links
+
+- **New here?** Start with [GETTING_STARTED.md](GETTING_STARTED.md)
+- **Need syntax help?** See [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
+- **Want to practice?** Try [EXERCISES.md](EXERCISES.md)
+- **Teaching this?** Read [INSTRUCTOR_NOTES.md](INSTRUCTOR_NOTES.md)
+
 ## Prerequisites
 
 - Python 3.8 or higher
@@ -23,6 +30,8 @@ Start here to learn the fundamentals:
 - [`wordcount.py`](01-basics/wordcount.py) - Classic WordCount with inline data
 - [`examples/sales.py`](01-basics/examples/sales.py) - Business data analysis
 - [`examples/logs.py`](01-basics/examples/logs.py) - Log file analysis
+- [`examples/temperatures.py`](01-basics/examples/temperatures.py) - Average temperature by city
+- [`examples/word_metrics.py`](01-basics/examples/word_metrics.py) - Multi-metric text analysis
 
 **What you'll learn**: Map function, Reduce function, Shuffle/Sort phase
 
@@ -30,12 +39,15 @@ Start here to learn the fundamentals:
 1. Run each example and understand the output
 2. Modify the mapper in `wordcount.py` to count only words longer than 5 characters
 3. Create a new example that calculates average sales per product (hint: modify the reducer)
+4. See [EXERCISES.md](EXERCISES.md) for more structured exercises with hints and solutions
 
 ```bash
 cd 01-basics
 python3 wordcount.py
 python3 examples/sales.py
 python3 examples/logs.py
+python3 examples/temperatures.py
+python3 examples/word_metrics.py
 ```
 
 ---

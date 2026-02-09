@@ -1,0 +1,15 @@
+{"product_id": "P001", "product": "Laptop", "category": "Electronics", "amount": 1200, "quantity": 1, "region": "North", "date": "2026-01-15"}
+{"product_id": "P002", "product": "Mouse", "category": "Electronics", "amount": 25, "quantity": 2, "region": "South", "date": "2026-01-15"}
+{"product_id": "P003", "product": "Desk Chair", "category": "Furniture", "amount": 350, "quantity": 1, "region": "North", "date": "2026-01-15"}
+{"product_id": "P001", "product": "Laptop", "category": "Electronics", "amount": 1200, "quantity": 1, "region": "East", "date": "2026-01-16"}
+{"product_id": "P004", "product": "Monitor", "category": "Electronics", "amount": 450, "quantity": 1, "region": "West", "date": "2026-01-16"}
+{"product_id": "P002", "product": "Mouse", "category": "Electronics", "amount": 25, "quantity": 3, "region": "North", "date": "2026-01-16"}
+{"product_id": "P005", "product": "Desk", "category": "Furniture", "amount": 600, "quantity": 1, "region": "South", "date": "2026-01-16"}
+{"product_id": "P001", "product": "Laptop", "category": "Electronics", "amount": 1200, "quantity": 2, "region": "North", "date": "2026-01-17"}
+{"product_id": "P003", "product": "Desk Chair", "category": "Furniture", "amount": 350, "quantity": 1, "region": "East", "date": "2026-01-17"}
+{"product_id": "P006", "product": "Keyboard", "category": "Electronics", "amount": 80, "quantity": 2, "region": "West", "date": "2026-01-17"}
+{"product_id": "P004", "product": "Monitor", "category": "Electronics", "amount": 450, "quantity": 1, "region": "North", "date": "2026-01-18"}
+{"product_id": "P005", "product": "Desk", "category": "Furniture", "amount": 600, "quantity": 1, "region": "East", "date": "2026-01-18"}
+{"product_id": "P002", "product": "Mouse", "category": "Electronics", "amount": 25, "quantity": 1, "region": "South", "date": "2026-01-18"}
+{"product_id": "P007", "product": "Lamp", "category": "Furniture", "amount": 45, "quantity": 3, "region": "West", "date": "2026-01-18"}
+{"product_id": "P001", "product": "Laptop", "category": "Electronics", "amount": 1200, "quantity": 1, "region": "South", "date": "2026-01-19"}

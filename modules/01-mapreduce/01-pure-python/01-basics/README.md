@@ -34,6 +34,18 @@ Learn the fundamental concepts of MapReduce with simple, self-contained examples
    - Demonstrates filtering and counting
    - Run: `python examples/logs.py`
 
+4. **[`examples/temperatures.py`](examples/temperatures.py)** - Average Calculation
+   - Calculates average temperature by city
+   - Shows a reducer that computes averages (not just sums)
+   - Works with structured data (dictionaries)
+   - Run: `python examples/temperatures.py`
+
+5. **[`examples/word_metrics.py`](examples/word_metrics.py)** - Multi-Metric Analysis
+   - Counts chars, words, lines, and longest word simultaneously
+   - Shows how to emit multiple key types from one mapper
+   - Demonstrates different aggregation strategies per key
+   - Run: `python examples/word_metrics.py`
+
 ## Key Concepts
 
 **Map Function**
@@ -56,6 +68,8 @@ Learn the fundamental concepts of MapReduce with simple, self-contained examples
 python wordcount.py
 python examples/sales.py
 python examples/logs.py
+python examples/temperatures.py
+python examples/word_metrics.py
 ```
 
 ## Next Level

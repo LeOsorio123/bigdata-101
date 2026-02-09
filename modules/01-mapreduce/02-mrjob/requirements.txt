@@ -1,0 +1,4 @@
+# mrjob - MapReduce library for Python
+# Note: Requires Python 3.8 - 3.12 (not compatible with Python 3.13+)
+mrjob>=0.7.4
+PyYAML>=5.0
