@@ -232,3 +232,6 @@ pyrightconfig.json
 INSTRUCTOR_NOTES.md
 output/
 clase.json
+ppt/
+template-upb.pptx
+resources/*.pptx
