@@ -23,18 +23,19 @@ from pyspark.sql.types import IntegerType, DoubleType
 STORAGE_ACCOUNT = "<your_storage_account>"
 CONTAINER       = "bigdata"
 ACCESS_KEY      = "<your_access_key>"
-# In production use: ACCESS_KEY = dbutils.secrets.get(scope="adls-scope", key="storage-key")
+# NOTE: Replace "<your_initials>_" with your initials (e.g., "jsm_" for John Smith)
 # ──────────────────────────────────────────────────────────────────────────────
 
+# Configure access to ADLS Gen2 via Access Key (same as Bronze)
 spark.conf.set(
     f"fs.azure.account.key.{STORAGE_ACCOUNT}.dfs.core.windows.net",
     ACCESS_KEY
 )
 
 ADLS_BASE    = f"abfss://{CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net"
-BRONZE_TABLE = "medallion.bronze_travel_times"
+BRONZE_TABLE = "<PLACEHOLDER>_medallion.bronze_travel_times"
 SILVER_PATH  = f"{ADLS_BASE}/medallion/silver/travel_times"
-SILVER_TABLE = "medallion.silver_travel_times"
+SILVER_TABLE = "<PLACEHOLDER>_medallion.silver_travel_times"
 
 df_bronze = spark.table(BRONZE_TABLE)
 print(f"📥 Records in Bronze: {df_bronze.count()}")
@@ -46,7 +47,7 @@ df_bronze.printSchema()
 # MAGIC ## 2. Silver transformations
 # MAGIC
 # MAGIC - Rename columns (snake_case, no spaces)
-# MAGIC - Cast types (STRING → INT, DOUBLE)
+# MAGIC - Clean and cast types (STRING → INT, DOUBLE) with error handling
 # MAGIC - Extract city from the source file name
 # MAGIC - Remove geometries (not needed for analytics)
 # MAGIC - Filter invalid records
@@ -68,15 +69,15 @@ df_silver = (df_bronze
     # Drop geometry columns (heavy, not needed for analytics)
     .drop("Origin Geometry", "Destination Geometry")
 
-    # Cast types
-    .withColumn("origin_id", col("origin_id").cast(IntegerType()))
-    .withColumn("destination_id", col("destination_id").cast(IntegerType()))
-    .withColumn("mean_travel_time_sec", col("mean_travel_time_sec").cast(DoubleType()))
-    .withColumn("lower_bound_sec", col("lower_bound_sec").cast(DoubleType()))
-    .withColumn("upper_bound_sec", col("upper_bound_sec").cast(DoubleType()))
+    # Cast types safely using try_cast (returns null on error instead of crashing)
+    .withColumn("origin_id", col("origin_id").try_cast(IntegerType()))
+    .withColumn("destination_id", col("destination_id").try_cast(IntegerType()))
+    .withColumn("mean_travel_time_sec", col("mean_travel_time_sec").try_cast(DoubleType()))
+    .withColumn("lower_bound_sec", col("lower_bound_sec").try_cast(DoubleType()))
+    .withColumn("upper_bound_sec", col("upper_bound_sec").try_cast(DoubleType()))
 
     # Extract city from the source file name
-    .withColumn("city", regexp_extract("_source_file", r"Travel_Times - (.+)\.csv", 1))
+    .withColumn("city", regexp_extract("_source_file", regexp_extract("_source_file", r"/Travel_Times%20-%20([^/]+)\.csv$", 1))
 
     # Clean names
     .withColumn("origin_name", trim(col("origin_name")))
@@ -98,6 +99,17 @@ df_silver = (df_bronze
 
 # Count records before filtering
 total_before = df_silver.count()
+
+# Show records with null values in critical fields (for debugging)
+print("🔍 Records with null values before filtering:")
+df_silver.filter(
+    col("origin_id").isNull() |
+    col("destination_id").isNull() |
+    col("mean_travel_time_sec").isNull()
+).select(
+    "origin_id", "destination_id", "mean_travel_time_sec",
+    "origin_name", "destination_name", "city"
+).show(20, truncate=False)
 
 # Filter invalid records
 df_silver_clean = (df_silver
@@ -128,6 +140,7 @@ print(f"❌ Rejected records:         {rejected}")
 (df_silver_clean.write
     .format("delta")
     .mode("overwrite")
+    .partitionBy("city")
     .option("overwriteSchema", "true")
     .save(SILVER_PATH)
 )
@@ -148,7 +161,7 @@ print(f"✅ Silver written to: {SILVER_PATH}")
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT * FROM medallion.silver_travel_times LIMIT 10
+# MAGIC SELECT * FROM <PLACEHOLDER>_medallion.silver_travel_times LIMIT 10
 
 # COMMAND ----------
 
@@ -157,7 +170,7 @@ print(f"✅ Silver written to: {SILVER_PATH}")
 # MAGIC SELECT city, COUNT(*) as routes,
 # MAGIC        ROUND(AVG(mean_travel_time_sec), 0) as avg_travel_sec,
 # MAGIC        ROUND(AVG(mean_travel_time_sec) / 60, 1) as avg_travel_min
-# MAGIC FROM medallion.silver_travel_times
+# MAGIC FROM <PLACEHOLDER>_medallion.silver_travel_times
 # MAGIC GROUP BY city
 # MAGIC ORDER BY routes DESC
 
@@ -165,7 +178,7 @@ print(f"✅ Silver written to: {SILVER_PATH}")
 
 # MAGIC %sql
 # MAGIC -- Verify data types
-# MAGIC DESCRIBE medallion.silver_travel_times
+# MAGIC DESCRIBE <PLACEHOLDER>_medallion.silver_travel_times
 
 # COMMAND ----------
 
