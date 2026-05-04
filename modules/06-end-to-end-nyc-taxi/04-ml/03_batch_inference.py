@@ -1,6 +1,12 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # Batch inference con el modelo registrado (Spark MLlib)
+# MAGIC
+# MAGIC Este notebook aplica el modelo registrado en UC sobre un **hold-out
+# MAGIC temporal** de los últimos 7 días de `T_ML_FEATURES`. Esas filas no
+# MAGIC fueron vistas por el modelo durante el entrenamiento (ni en train
+# MAGIC ni en test), por lo que las métricas que calculemos aquí simulan
+# MAGIC un escenario realista de inferencia en producción sobre datos nuevos.
 
 # COMMAND ----------
 
@@ -28,7 +34,16 @@ model = mlflow.spark.load_model(model_uri)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 2. Seleccionar datos recientes (últimos 7 días)
+# MAGIC ## 2. Seleccionar datos recientes (hold-out de 7 días)
+# MAGIC
+# MAGIC En `01_train_trip_duration` el split temporal fue:
+# MAGIC - Train: `pickup_date < max_date - 30d`
+# MAGIC - Test:  `max_date - 30d ≤ pickup_date < max_date - 7d`
+# MAGIC - **Hold-out**: `pickup_date ≥ max_date - 7d` (reservado para aquí).
+# MAGIC
+# MAGIC Al predecir sobre este hold-out, el modelo está viendo datos nuevos
+# MAGIC por primera vez, lo que da una medida honesta de su desempeño en
+# MAGIC producción.
 
 # COMMAND ----------
 

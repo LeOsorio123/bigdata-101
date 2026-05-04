@@ -13,6 +13,7 @@
 
 import mlflow
 import mlflow.spark
+from mlflow.models.signature import infer_signature
 from pyspark.sql import functions as F
 from pyspark.ml import Pipeline
 from pyspark.ml.feature import StringIndexer, OneHotEncoder, VectorAssembler
@@ -26,6 +27,19 @@ mlflow.set_registry_uri("databricks-uc")
 
 # MAGIC %md
 # MAGIC ## 1. Cargar features y split temporal
+# MAGIC
+# MAGIC Para evitar **data leakage** entre entrenamiento e inferencia usamos
+# MAGIC un split temporal de 3 ventanas:
+# MAGIC
+# MAGIC - **Train**: `pickup_date < max_date - 30 días` → el modelo aprende aquí.
+# MAGIC - **Test**:  `max_date - 30 días ≤ pickup_date < max_date - 7 días` →
+# MAGIC   se usa solo para calcular RMSE / MAE / R² durante el entrenamiento.
+# MAGIC - **Hold-out (últimos 7 días)**: **no** se usan aquí. Se reservan para
+# MAGIC   el notebook `03_batch_inference`, simulando "datos nuevos" que el
+# MAGIC   modelo nunca vio ni en train ni en test.
+# MAGIC
+# MAGIC Esto hace que las métricas de producción (en `03`) sean una evaluación
+# MAGIC honesta sobre datos no vistos.
 
 # COMMAND ----------
 
@@ -34,14 +48,18 @@ features_df = spark.table(T_ML_FEATURES)
 # Muestreo del 5 % para agilizar el entrenamiento en clase
 sample = features_df.sample(fraction=0.05, seed=42)
 
-# Split temporal: últimos 30 días → test, el resto → train
+# Split temporal con hold-out de 7 días reservado para inferencia
 max_date = sample.agg(F.max("pickup_date")).first()[0]
-cutoff = F.date_sub(F.lit(max_date), 30)
+train_cutoff    = F.date_sub(F.lit(max_date), 30)  # fin de train
+test_cutoff     = F.date_sub(F.lit(max_date), 7)   # fin de test / inicio hold-out
 
-train_df = sample.filter(F.col("pickup_date") < cutoff)
-test_df  = sample.filter(F.col("pickup_date") >= cutoff)
+train_df = sample.filter(F.col("pickup_date") < train_cutoff)
+test_df  = sample.filter(
+    (F.col("pickup_date") >= train_cutoff) & (F.col("pickup_date") < test_cutoff)
+)
 
 print(f"Train: {train_df.count():,} | Test: {test_df.count():,}")
+print(f"(Los últimos 7 días quedan como hold-out para 03_batch_inference)")
 
 # COMMAND ----------
 
@@ -116,8 +134,19 @@ with mlflow.start_run(run_name=f"{USER_INITIALS}_gbt_trip_duration") as run:
         "stepSize": 0.1,
     })
 
-    # Loguear el PipelineModel de Spark
-    mlflow.spark.log_model(model, artifact_path="model")
+    # Inferir signature a partir de un sample de inputs/outputs
+    # (Unity Catalog exige signature al registrar el modelo)
+    input_cols = CATEGORICAL + NUMERIC
+    sample_input = train_df.select(*input_cols).limit(5).toPandas()
+    sample_output = predictions.select("prediction").limit(5).toPandas()
+    signature = infer_signature(sample_input, sample_output)
+
+    # Loguear el PipelineModel de Spark con signature
+    mlflow.spark.log_model(
+        model,
+        artifact_path="model",
+        signature=signature,
+    )
 
     run_id = run.info.run_id
     print(f"Run: {run_id}")
@@ -125,4 +154,15 @@ with mlflow.start_run(run_name=f"{USER_INITIALS}_gbt_trip_duration") as run:
 
 # COMMAND ----------
 
-dbutils.jobs.taskValues.set(key="training_run_id", value=run_id)
+# MAGIC %md
+# MAGIC ## 4. Run ID para registrar el modelo
+# MAGIC
+# MAGIC Copia el `run_id` de abajo y pégalo en el notebook `02_register_model`
+# MAGIC en la variable `run_id`.
+
+# COMMAND ----------
+
+print("=" * 60)
+print(f"RUN_ID: {run_id}")
+print("=" * 60)
+print("👉 Copia este run_id y pégalo en 02_register_model.py")

@@ -4,6 +4,19 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ## 0. Widget para el `run_id`
+# MAGIC
+# MAGIC Corre esta celda primero para crear el widget. Luego pega en el
+# MAGIC widget (arriba del notebook) el `run_id` que imprimió el notebook
+# MAGIC `01_train_trip_duration`.
+
+# COMMAND ----------
+
+dbutils.widgets.text("run_id", "", "Run ID del training")
+
+# COMMAND ----------
+
 # MAGIC %run ../00-setup/config
 
 # COMMAND ----------
@@ -26,31 +39,13 @@ spark.sql(f"CREATE SCHEMA IF NOT EXISTS {CATALOG}.{SCHEMA_ML}")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 2. Obtener run_id
+# MAGIC ## 2. Leer el `run_id` del widget
 
 # COMMAND ----------
 
-run_id = dbutils.jobs.taskValues.get(taskKey="train", key="training_run_id", default=None, debugValue="")
+run_id = dbutils.widgets.get("run_id").strip()
 
-if not run_id:
-    client = MlflowClient()
-    # Buscar en el experimento activo del notebook actual
-    experiment = mlflow.get_experiment_by_name(
-        f"/Users/{spark.conf.get('spark.databricks.notebook.path', '')}"
-    )
-    if experiment is None:
-        # Fallback: usar el experimento por defecto del notebook
-        experiment_id = mlflow.tracking.fluent._get_experiment_id()
-    else:
-        experiment_id = experiment.experiment_id
-    runs = client.search_runs(
-        experiment_ids=[experiment_id],
-        order_by=["start_time DESC"],
-        max_results=1,
-    )
-    run_id = runs[0].info.run_id if runs else None
-
-assert run_id, "No se encontró run_id. Corre primero el notebook de training."
+assert run_id, "Pega el run_id del notebook 01_train_trip_duration en el widget 'run_id'."
 print(f"Registrando modelo del run: {run_id}")
 
 # COMMAND ----------
