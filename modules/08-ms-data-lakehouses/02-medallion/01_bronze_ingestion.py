@@ -16,14 +16,17 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 1. Configuration — Azure Data Lake Storage Gen2
+# MAGIC ## 1. Configuration
+# MAGIC
+# MAGIC Each student uses their own schema (last name) within the shared catalog.
+# MAGIC The raw CSV files are stored in a Unity Catalog Volume.
 # MAGIC
 # MAGIC ### Prerequisites
-# MAGIC 1. Create a Storage Account with **hierarchical namespace enabled** (ADLS Gen2)
-# MAGIC 2. Create a container named `bigdata`
+# MAGIC 1. Your schema must exist in the catalog `maestria_bd_2026_01`
+# MAGIC 2. A volume named `datalake` must exist in your schema
 # MAGIC 3. Upload the 7 Uber Travel Times CSVs to the path:
 # MAGIC    ```
-# MAGIC    bigdata/
+# MAGIC    /Volumes/maestria_bd_2026_01/<your_last_name>/datalake/
 # MAGIC    └── landing/
 # MAGIC        └── uber/
 # MAGIC            ├── Travel_Times - Bogota.csv
@@ -34,44 +37,38 @@
 # MAGIC            ├── Travel_Times - Sydney.csv
 # MAGIC            └── Travel_Times - Washington DC.csv
 # MAGIC    ```
-# MAGIC 4. Configure access from Databricks (see next cell)
 
 # COMMAND ----------
 
-from pyspark.sql.functions import current_timestamp, lit, input_file_name
+from pyspark.sql.functions import current_timestamp, lit, col
 from pyspark.sql.types import *
 
-# ─── CONFIGURE THESE VARIABLES ────────────────────────────────────────────────
-# Replace with your Storage Account values
-STORAGE_ACCOUNT = "<your_storage_account>"   # e.g.: "introbigdataupb"
-CONTAINER       = "bigdata"
-ACCESS_KEY      = "<your_access_key>"        # get from Azure Portal → Storage Account → Access Keys
+# ─── CONFIGURE YOUR LAST NAME HERE ───────────────────────────────────────────
+CATALOG = "maestria_bd_2026_01"
+SCHEMA  = None  # <-- Change to your last name (lowercase, e.g. "garcia")
+VOLUME  = "datalake"
 # ──────────────────────────────────────────────────────────────────────────────
 
-# Configure access to ADLS Gen2 via Access Key
-spark.conf.set(
-    f"fs.azure.account.key.{STORAGE_ACCOUNT}.dfs.core.windows.net",
-    ACCESS_KEY
-)
+assert SCHEMA is not None, "⚠️ You must set SCHEMA to your last name before continuing!"
 
-# ──────────────────────────────────────────────────────────────────────────────
-# NOTE: In production, NEVER put the key directly in the notebook.
-# Use Databricks Secrets:
-#   1. Create scope:  databricks secrets create-scope --scope adls-scope
-#   2. Store key:     databricks secrets put-secret --scope adls-scope --key storage-key
-#   3. In the notebook:
-#      ACCESS_KEY = dbutils.secrets.get(scope="adls-scope", key="storage-key")
-# ──────────────────────────────────────────────────────────────────────────────
+# Unity Catalog volume path (accessible in serverless)
+VOLUME_PATH = f"/Volumes/{CATALOG}/{SCHEMA}/{VOLUME}"
 
-# ADLS Gen2 paths (abfss:// protocol)
-ADLS_BASE    = f"abfss://{CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net"
-RAW_PATH     = f"{ADLS_BASE}/landing/uber/"
-BRONZE_PATH  = f"{ADLS_BASE}/medallion/bronze/travel_times"
-BRONZE_TABLE = "medallion.bronze_travel_times"
+# Paths
+RAW_PATH     = f"{VOLUME_PATH}/landing/uber/"
+BRONZE_PATH  = f"{VOLUME_PATH}/medallion/bronze/travel_times"
+BRONZE_TABLE = "bronze_travel_times"
 
-print(f"✅ ADLS Gen2 configured")
-print(f"   Landing zone: {RAW_PATH}")
-print(f"   Bronze path:  {BRONZE_PATH}")
+# Set default catalog and schema for SQL commands
+spark.sql(f"USE CATALOG {CATALOG}")
+spark.sql(f"USE SCHEMA {SCHEMA}")
+
+print(f"Catalog:      {CATALOG}")
+print(f"Schema:       {SCHEMA}")
+print(f"Volume:       {VOLUME_PATH}")
+print(f"Landing zone: {RAW_PATH}")
+print(f"Bronze path:  {BRONZE_PATH}")
+print(f"Bronze table: {CATALOG}.{SCHEMA}.{BRONZE_TABLE}")
 
 # COMMAND ----------
 
@@ -114,28 +111,28 @@ raw_schema = StructType([
 ])
 
 # Read CSVs in their original format
-# spark.read.csv → reads CSV | spark.read.json → reads JSON | spark.read.jdbc → reads DB
+# spark.read.csv -> reads CSV | spark.read.json -> reads JSON | spark.read.jdbc -> reads DB
 # In Bronze, the source can be any format. The key is NOT to transform the content.
 df_raw = (spark.read
     .option("header", "true")
     .schema(raw_schema)          # STRING schema to preserve everything
-    .csv(RAW_PATH + "*.csv")     # ← source is CSV here, but could be .json, .parquet, etc.
+    .csv(RAW_PATH + "*.csv")     # source is CSV here, but could be .json, .parquet, etc.
 )
 
 # Add ingestion metadata (Bronze pattern)
 # These fields allow tracking WHEN and WHERE each record came from
 df_bronze = (df_raw
     .withColumn("_ingestion_timestamp", current_timestamp())  # when it was ingested
-    .withColumn("_source_file", input_file_name())            # which file it came from
+    .withColumn("_source_file", col("_metadata.file_path"))   # which file it came from
 )
 
-print(f"✅ Raw records read: {df_bronze.count()}")
+print(f"Raw records read: {df_bronze.count()}")
 df_bronze.printSchema()
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 3. Write to Bronze (CSV → Delta)
+# MAGIC ## 3. Write to Bronze (CSV -> Delta)
 # MAGIC
 # MAGIC This is where the format conversion happens: data that arrived as CSV
 # MAGIC is written as **Delta Lake**. The content is identical — only the
@@ -143,27 +140,19 @@ df_bronze.printSchema()
 
 # COMMAND ----------
 
-# Write as Delta — append mode (we never overwrite Bronze)
+# Write as a managed Delta table — append mode (we never overwrite Bronze)
 # Data that arrived as CSV is now stored as Delta
 # Content: IDENTICAL to the original CSV | Format: Delta (Parquet + transaction log)
+# Column Mapping enabled to support special characters in column names (spaces, parentheses)
 (df_bronze.write
-    .format("delta")             # ← STORAGE format: Delta
-    .mode("append")              # ← append-only: we never overwrite Bronze
-    .option("mergeSchema", "true")  # ← allows adding new columns in future ingestions
+    .format("delta")
+    .mode("append")                     # append-only: we never overwrite Bronze
+    .option("mergeSchema", "true")      # allows adding new columns in future ingestions
+    .option("delta.columnMapping.mode", "name")
     .save(BRONZE_PATH)
 )
 
-print(f"✅ Data written to Bronze: {BRONZE_PATH}")
-
-# COMMAND ----------
-
-# Register as a table for SQL queries
-spark.sql(f"CREATE DATABASE IF NOT EXISTS medallion")
-spark.sql(f"""
-CREATE TABLE IF NOT EXISTS {BRONZE_TABLE}
-USING DELTA
-LOCATION '{BRONZE_PATH}'
-""")
+print(f"Data written to: {BRONZE_PATH}")
 
 # COMMAND ----------
 
@@ -172,16 +161,14 @@ LOCATION '{BRONZE_PATH}'
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC SELECT * FROM medallion.bronze_travel_times LIMIT 5
+# Read back from the Delta path in the volume
+df_verify = spark.read.format("delta").load(BRONZE_PATH)
+df_verify.show(5)
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC -- How many records per source file?
-# MAGIC SELECT _source_file, COUNT(*) as records
-# MAGIC FROM medallion.bronze_travel_times
-# MAGIC GROUP BY _source_file
+# How many records per source file?
+df_verify.groupBy("_source_file").count().show(truncate=False)
 
 # COMMAND ----------
 
@@ -193,19 +180,21 @@ LOCATION '{BRONZE_PATH}'
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC DESCRIBE HISTORY medallion.bronze_travel_times
+from delta.tables import DeltaTable
+
+dt = DeltaTable.forPath(spark, BRONZE_PATH)
+dt.history().show(truncate=False)
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## Key takeaways for Bronze
 # MAGIC
-# MAGIC - ✅ Sources can be any format (CSV, JSON, XML, JDBC, APIs)
-# MAGIC - ✅ Data is READ in its original format, WRITTEN to Delta
-# MAGIC - ✅ Content is NOT transformed — only the storage format changes
-# MAGIC - ✅ All types as STRING (we don't lose data due to type errors)
-# MAGIC - ✅ Ingestion metadata: `_ingestion_timestamp`, `_source_file`
-# MAGIC - ✅ Append-only — we never delete or overwrite
-# MAGIC - ✅ Delta format → ACID, time travel, schema evolution
-# MAGIC - ✅ Historical source of truth — if something fails, we reprocess from here
+# MAGIC - Sources can be any format (CSV, JSON, XML, JDBC, APIs)
+# MAGIC - Data is READ in its original format, WRITTEN to Delta
+# MAGIC - Content is NOT transformed — only the storage format changes
+# MAGIC - All types as STRING (we don't lose data due to type errors)
+# MAGIC - Ingestion metadata: `_ingestion_timestamp`, `_source_file`
+# MAGIC - Append-only — we never delete or overwrite
+# MAGIC - Delta format: ACID, time travel, schema evolution
+# MAGIC - Historical source of truth — if something fails, we reprocess from here
