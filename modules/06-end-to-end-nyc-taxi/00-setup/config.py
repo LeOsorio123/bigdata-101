@@ -7,10 +7,10 @@
 # MAGIC
 # MAGIC ## Arquitectura
 # MAGIC
-# MAGIC - **Landing compartido**: Volume UC en `/Volumes/maestria_bd_2026_01/default/nytaxi_landing/`
+# MAGIC - **Landing compartido**: Volume UC en `/Volumes/<CATALOG>/default/nytaxi_landing/`
 # MAGIC   con los parquets mensuales de NYC TLC.
-# MAGIC - **Catálogo compartido**: `maestria_bd_2026_01` con schema por estudiante.
-# MAGIC - **Datalake por capas**: Volumes en `/Volumes/maestria_bd_2026_01/soto/datalake/`
+# MAGIC - **Catálogo compartido**: `<CATALOG>` con schema por estudiante.
+# MAGIC - **Datalake por capas**: Volumes en `/Volumes/<CATALOG>/<SCHEMA>/datalake/`
 # MAGIC   con subdirectorios `bronze/`, `silver/`, `gold/`.
 
 # COMMAND ----------
@@ -31,8 +31,8 @@ ZONES_VOLUME_PATH = f"/Volumes/{CATALOG}/default/nytaxi_zones"
 # =============================================================================
 # Paths del datalake por capas (Volumes UC)
 # =============================================================================
-PATH_BRONZE_TRIPS = f"/Volumes/{CATALOG}/soto/datalake/bronze/ny_taxi/trip/"
-PATH_BRONZE_ZONES = f"/Volumes/{CATALOG}/soto/datalake/bronze/ny_taxi/zones/"
+PATH_BRONZE_TRIPS = f"/Volumes/{CATALOG}/{SCHEMA}/datalake/bronze/ny_taxi/trip/"
+PATH_BRONZE_ZONES = f"/Volumes/{CATALOG}/{SCHEMA}/datalake/bronze/ny_taxi/zones/"
 
 # COMMAND ----------
 
