@@ -35,6 +35,23 @@ PATH_BRONZE_TRIPS = f"/Volumes/{CATALOG}/{SCHEMA}/datalake/bronze/ny_taxi/trip/"
 PATH_BRONZE_ZONES = f"/Volumes/{CATALOG}/{SCHEMA}/datalake/bronze/ny_taxi/zones/"
 PATH_SILVER_TRIPS = f"/Volumes/{CATALOG}/{SCHEMA}/datalake/silver/ny_taxi/trips/"
 PATH_SILVER_REJECTED = f"/Volumes/{CATALOG}/{SCHEMA}/datalake/silver/ny_taxi/trips_rejected/"
+
+# =============================================================================
+# Gold
+# =============================================================================
+PATH_GOLD_ML_FEATURES = f"/Volumes/{CATALOG}/{SCHEMA}/datalake/gold/ny_taxi/ml_features/"
+
+# =============================================================================
+# ML
+# =============================================================================
+PATH_ML_PREDICTIONS = f"/Volumes/{CATALOG}/{SCHEMA}/datalake/gold/ny_taxi/ml_predictions/"
+
+# Modelo en Unity Catalog
+SCHEMA_ML = f"{SCHEMA}_ml"
+MODEL_NAME = f"{CATALOG}.{SCHEMA_ML}.trip_duration_gbt"
+
+# Iniciales del estudiante (derivadas del schema)
+USER_INITIALS = SCHEMA.upper() if SCHEMA else "STU"
 PATH_GOLD_ML_FEATURES = f"/Volumes/{CATALOG}/{SCHEMA}/datalake/gold/ny_taxi/ml_features/"
 # COMMAND ----------
 

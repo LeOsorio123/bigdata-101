@@ -29,7 +29,7 @@ mlflow.set_registry_uri("databricks-uc")
 
 # COMMAND ----------
 
-features_df = spark.read.format("delta").load(PATH_ML_FEATURES)
+features_df = spark.read.format("delta").load(PATH_GOLD_ML_FEATURES)
 
 # Muestreo del 5 % para agilizar el entrenamiento en clase
 sample = features_df.sample(fraction=0.05, seed=42)

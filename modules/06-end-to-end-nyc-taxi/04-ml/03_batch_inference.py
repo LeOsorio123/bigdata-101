@@ -34,7 +34,7 @@ model = mlflow.spark.load_model(model_uri)
 
 # COMMAND ----------
 
-features_df = spark.read.format("delta").load(PATH_ML_FEATURES)
+features_df = spark.read.format("delta").load(PATH_GOLD_ML_FEATURES)
 
 max_date = features_df.agg(F.max("pickup_date")).first()[0]
 recent = features_df.filter(
