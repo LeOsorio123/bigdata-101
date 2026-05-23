@@ -2,9 +2,9 @@
 # MAGIC %md
 # MAGIC # Bronze: ingesta de viajes desde el landing compartido
 # MAGIC
-# MAGIC Lee los Parquet mensuales del landing y los persiste como Delta
-# MAGIC en el Volume del estudiante. Opera en modo **append** mes a mes,
-# MAGIC permitiendo cargas incrementales.
+# MAGIC Lee los Parquet mensuales del landing (`LANDING_VOLUME_PATH`) y los
+# MAGIC persiste como Delta en `PATH_BRONZE_TRIPS`. Opera en modo **append**
+# MAGIC mes a mes, permitiendo cargas incrementales.
 # MAGIC
 # MAGIC **Idempotencia**: si un mes ya fue ingestado, se salta automáticamente.
 # MAGIC
@@ -44,7 +44,7 @@ MONTHS_TO_INGEST = [
 # MAGIC un DataFrame con el `UNIFIED_SCHEMA`.
 # MAGIC
 # MAGIC Antes de escribir, se verifica si el mes ya fue ingestado
-# MAGIC consultando `_source_file` en la tabla Delta bronze.
+# MAGIC consultando `_source_file` en la tabla Delta bronze (`PATH_BRONZE_TRIPS`).
 
 # COMMAND ----------
 
@@ -118,6 +118,17 @@ bronze.agg(
         F.month("tpep_pickup_datetime")
     ).alias("distinct_months"),
 ).display()
+
+# COMMAND ----------
+
+# Archivos ya ingestados en bronze
+(
+    bronze
+    .select(F.element_at(F.split("_source_file", "/"), -1).alias("archivo"))
+    .distinct()
+    .orderBy("archivo")
+    .display()
+)
 
 # COMMAND ----------
 
