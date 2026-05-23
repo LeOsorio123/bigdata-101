@@ -32,11 +32,10 @@ VOLUME_PATH = f"/Volumes/{LANDING_CATALOG}/{LANDING_SCHEMA}/{LANDING_VOLUME}"
 TRIPS_DIR = f"{VOLUME_PATH}/yellow_trips"
 ZONES_DIR = f"{VOLUME_PATH}/zones"
 
-# Meses a descargar
-MONTHS = [
-    "2023-01", "2023-02", "2023-03",
-    "2023-04", "2023-05", "2023-06",
-]
+# Rango de años a descargar (inclusive). Cada año descarga los 12 meses.
+# Los datos se publican con ~2 meses de retraso; meses futuros se saltan.
+YEAR_START = 2023
+YEAR_END = 2023
 
 # COMMAND ----------
 
@@ -81,25 +80,68 @@ print("✓ Permisos de lectura otorgados a bigdata-students")
 # MAGIC
 # MAGIC `urllib.request.urlretrieve` escribe directo a `/Volumes/...` que es
 # MAGIC un path local válido en clusters UC. Sin `dbutils.fs.cp`, sin `/tmp`.
+# MAGIC
+# MAGIC Genera las URLs dinámicamente para el rango de años configurado.
+# MAGIC Patrón: `https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_YYYY-MM.parquet`
+
+# COMMAND ----------
+
+from datetime import date
+
+def generate_yellow_taxi_urls(year_start: int, year_end: int) -> list:
+    """Genera la lista de (filename, url) para el rango de años dado."""
+    urls = []
+    today = date.today()
+    for year in range(year_start, year_end + 1):
+        for month in range(1, 13):
+            # No generar URLs para meses futuros
+            if date(year, month, 1) > today:
+                break
+            month_str = f"{year}-{month:02d}"
+            filename = f"yellow_tripdata_{month_str}.parquet"
+            url = f"{TLC_BASE_URL}/{filename}"
+            urls.append((filename, url))
+    return urls
+
+file_list = generate_yellow_taxi_urls(YEAR_START, YEAR_END)
+print(f"Archivos a verificar/descargar: {len(file_list)}")
 
 # COMMAND ----------
 
 os.makedirs(TRIPS_DIR, exist_ok=True)
 
-for month in MONTHS:
-    filename = f"yellow_tripdata_{month}.parquet"
+downloaded = 0
+skipped = 0
+errors = []
+
+for filename, url in file_list:
     dest = f"{TRIPS_DIR}/{filename}"
 
     if os.path.exists(dest) and os.path.getsize(dest) > 0:
-        size_mb = os.path.getsize(dest) / 1024 / 1024
-        print(f"  skip  {filename:40s} ({size_mb:.1f} MB ya existe)")
+        size_mb = os.path.getsize(dest) / (1024 * 1024)
+        print(f"  ⏭️  {filename:45s} ({size_mb:>7.1f} MB ya existe)")
+        skipped += 1
         continue
 
-    url = f"{TLC_BASE_URL}/{filename}"
-    print(f"  downloading {filename}...", end="", flush=True)
-    urllib.request.urlretrieve(url, dest)
-    size_mb = os.path.getsize(dest) / 1024 / 1024
-    print(f" {size_mb:.1f} MB ✓")
+    print(f"  ⬇️  {filename:45s} ...", end="", flush=True)
+    try:
+        urllib.request.urlretrieve(url, dest)
+        size_mb = os.path.getsize(dest) / (1024 * 1024)
+        print(f" {size_mb:>7.1f} MB ✅")
+        downloaded += 1
+    except Exception as e:
+        print(f" ❌ {e}")
+        errors.append((filename, str(e)))
+        if os.path.exists(dest):
+            os.remove(dest)
+
+print(f"\n{'='*60}")
+print(f"  Descargados: {downloaded}  |  Existentes: {skipped}  |  Errores: {len(errors)}")
+print(f"{'='*60}")
+if errors:
+    print("\n⚠️  Archivos con error:")
+    for fn, err in errors:
+        print(f"    - {fn}: {err}")
 
 # COMMAND ----------
 
