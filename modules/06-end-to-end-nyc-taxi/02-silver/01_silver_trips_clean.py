@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Silver: limpieza y validación (incremental)
+# MAGIC # Silver: limpieza, validación y enriquecimiento (incremental)
 # MAGIC
 # MAGIC Este notebook implementa la capa Silver del patrón Medallion con procesamiento **incremental**:
 # MAGIC
@@ -11,8 +11,9 @@
 # MAGIC 5. **Umbrales dinámicos** — Calcular percentiles (p99) para definir límites de outliers
 # MAGIC 6. **Reglas de calidad** — Filtrar registros inválidos
 # MAGIC 7. **Cuarentena** — Registros rechazados con motivos explícitos (`rejection_reasons`)
-# MAGIC 8. **Persistencia** — `replaceWhere` incremental particionado por año/mes
-# MAGIC 9. **Métricas de calidad** — Tabla histórica para monitoreo de SLA
+# MAGIC 8. **Enriquecimiento** — Broadcast join con zonas + features temporales y económicas
+# MAGIC 9. **Persistencia** — `replaceWhere` incremental particionado por año/mes
+# MAGIC 10. **Métricas de calidad** — Tabla histórica para monitoreo de SLA
 # MAGIC
 # MAGIC Los hallazgos y reglas se documentan a lo largo del notebook conforme se descubren.
 
@@ -309,7 +310,60 @@ print(f"✓ Rechazados: {count_rejected:>12,}")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 8. Persistir en Silver (`replaceWhere` por partición)
+# MAGIC ## 8. Enriquecimiento: zonas y features temporales/económicas
+
+# COMMAND ----------
+
+# --- Broadcast join con zonas ---
+zones = spark.read.format("delta").load(PATH_BRONZE_ZONES)
+
+zones_pickup = zones.select(
+    F.col("LocationID").alias("PULocationID"),
+    F.col("Borough").alias("pickup_borough"),
+    F.col("Zone").alias("pickup_zone"),
+    F.col("service_zone").alias("pickup_service_zone"),
+)
+
+zones_dropoff = zones.select(
+    F.col("LocationID").alias("DOLocationID"),
+    F.col("Borough").alias("dropoff_borough"),
+    F.col("Zone").alias("dropoff_zone"),
+    F.col("service_zone").alias("dropoff_service_zone"),
+)
+
+valid_df = (
+    valid_df
+    .join(F.broadcast(zones_pickup),  on="PULocationID", how="left")
+    .join(F.broadcast(zones_dropoff), on="DOLocationID", how="left")
+)
+
+# COMMAND ----------
+
+# --- Features temporales y económicas ---
+valid_df = (
+    valid_df
+    .withColumn("pickup_date", F.to_date("tpep_pickup_datetime"))
+    .withColumn("pickup_hour", F.hour("tpep_pickup_datetime"))
+    .withColumn("pickup_dayofweek", F.dayofweek("tpep_pickup_datetime"))
+    .withColumn("is_weekend", F.col("pickup_dayofweek").isin(1, 7))
+    .withColumn("is_rush_hour",
+        F.col("pickup_hour").between(7, 9) | F.col("pickup_hour").between(17, 19))
+    .withColumn("tip_rate",
+        F.when(F.col("fare_amount") > 0, F.col("tip_amount") / F.col("fare_amount"))
+        .otherwise(F.lit(0.0)))
+    .withColumn("cost_per_mile",
+        F.when(F.col("trip_distance") > 0, F.col("total_amount") / F.col("trip_distance"))
+        .otherwise(F.lit(None)))
+    .withColumn("avg_speed_mph",
+        F.when(F.col("trip_duration_min") > 0,
+               F.col("trip_distance") / (F.col("trip_duration_min") / 60.0))
+        .otherwise(F.lit(None)))
+)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## 9. Persistir en Silver (`replaceWhere` por partición)
 # MAGIC
 # MAGIC ### Estrategia elegida: `replaceWhere`
 # MAGIC
@@ -386,7 +440,7 @@ print(f"✓ Silver rejected → {PATH_SILVER_REJECTED}")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 9. Métricas de calidad (tabla histórica)
+# MAGIC ## 10. Métricas de calidad (tabla histórica)
 
 # COMMAND ----------
 

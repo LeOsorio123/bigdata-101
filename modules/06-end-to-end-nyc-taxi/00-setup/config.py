@@ -33,7 +33,9 @@ ZONES_VOLUME_PATH = f"/Volumes/{CATALOG}/default/nytaxi_zones"
 # =============================================================================
 PATH_BRONZE_TRIPS = f"/Volumes/{CATALOG}/{SCHEMA}/datalake/bronze/ny_taxi/trip/"
 PATH_BRONZE_ZONES = f"/Volumes/{CATALOG}/{SCHEMA}/datalake/bronze/ny_taxi/zones/"
-
+PATH_SILVER_TRIPS = f"/Volumes/{CATALOG}/{SCHEMA}/datalake/silver/ny_taxi/trips/"
+PATH_SILVER_REJECTED = f"/Volumes/{CATALOG}/{SCHEMA}/datalake/silver/ny_taxi/trips_rejected/"
+PATH_GOLD_ML_FEATURES = f"/Volumes/{CATALOG}/{SCHEMA}/datalake/gold/ny_taxi/ml_features/"
 # COMMAND ----------
 
 # =============================================================================
