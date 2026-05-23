@@ -8,26 +8,42 @@
 
 # COMMAND ----------
 
-spark.sql(f"USE CATALOG {CATALOG}")
+from pyspark.sql import functions as F
 
-spark.sql(f"""
-    CREATE OR REPLACE TABLE {T_GOLD_HOURLY_DEMAND} AS
-    SELECT pickup_borough, pickup_zone, pickup_hour, pickup_dayofweek,
-      is_weekend, is_rush_hour,
-      COUNT(*) AS trips,
-      ROUND(AVG(total_amount), 2) AS avg_fare,
-      ROUND(AVG(avg_speed_mph), 2) AS avg_speed_mph
-    FROM {T_SILVER_TRIPS_ENRICHED}
-    WHERE pickup_zone IS NOT NULL
-    GROUP BY pickup_borough, pickup_zone, pickup_hour, pickup_dayofweek, is_weekend, is_rush_hour
-""")
+# COMMAND ----------
 
-spark.sql(f"OPTIMIZE {T_GOLD_HOURLY_DEMAND} ZORDER BY (pickup_zone, pickup_hour)")
+enriched = spark.read.format("delta").load(PATH_SILVER_TRIPS_ENRICHED)
 
-display(spark.sql(f"""
-    SELECT pickup_zone, pickup_hour, SUM(trips) AS trips
-    FROM {T_GOLD_HOURLY_DEMAND}
-    WHERE is_rush_hour = true
-    GROUP BY pickup_zone, pickup_hour
-    ORDER BY trips DESC LIMIT 10
-"""))
+# COMMAND ----------
+
+hourly = (
+    enriched
+    .filter(F.col("pickup_zone").isNotNull())
+    .groupBy("pickup_borough", "pickup_zone", "pickup_hour", "pickup_dayofweek", "is_weekend", "is_rush_hour")
+    .agg(
+        F.count("*").alias("trips"),
+        F.round(F.avg("total_amount"), 2).alias("avg_fare"),
+        F.round(F.avg("avg_speed_mph"), 2).alias("avg_speed_mph"),
+    )
+)
+
+# COMMAND ----------
+
+(
+    hourly.write.format("delta").mode("overwrite")
+    .option("overwriteSchema", "true")
+    .save(PATH_GOLD_HOURLY_DEMAND)
+)
+
+print(f"✓ Gold hourly demand escrito en {PATH_GOLD_HOURLY_DEMAND}")
+
+# COMMAND ----------
+
+display(
+    spark.read.format("delta").load(PATH_GOLD_HOURLY_DEMAND)
+    .filter(F.col("is_rush_hour") == True)
+    .groupBy("pickup_zone", "pickup_hour")
+    .agg(F.sum("trips").alias("trips"))
+    .orderBy(F.desc("trips"))
+    .limit(10)
+)

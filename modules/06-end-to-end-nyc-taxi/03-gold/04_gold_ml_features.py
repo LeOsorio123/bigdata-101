@@ -8,31 +8,51 @@
 
 # COMMAND ----------
 
-spark.sql(f"USE CATALOG {CATALOG}")
+from pyspark.sql import functions as F
 
-spark.sql(f"""
-    CREATE OR REPLACE TABLE {T_ML_FEATURES} AS
-    SELECT
-      trip_duration_min AS target_duration_min,
-      PULocationID, DOLocationID,
-      pickup_borough, dropoff_borough,
-      pickup_hour, pickup_dayofweek,
-      CAST(is_weekend AS INT) AS is_weekend,
-      CAST(is_rush_hour AS INT) AS is_rush_hour,
-      passenger_count, trip_distance, RatecodeID,
-      tpep_pickup_datetime AS pickup_ts,
-      pickup_date
-    FROM {T_SILVER_TRIPS_ENRICHED}
-    WHERE pickup_borough IS NOT NULL
-      AND dropoff_borough IS NOT NULL
-      AND trip_duration_min BETWEEN 2 AND 120
-      AND trip_distance BETWEEN 0.2 AND 50
-""")
+# COMMAND ----------
 
-display(spark.sql(f"""
-    SELECT COUNT(*) AS rows,
-      ROUND(AVG(target_duration_min), 2) AS avg_duration,
-      ROUND(STDDEV(target_duration_min), 2) AS sd_duration,
-      ROUND(AVG(trip_distance), 2) AS avg_distance
-    FROM {T_ML_FEATURES}
-"""))
+enriched = spark.read.format("delta").load(PATH_SILVER_TRIPS_ENRICHED)
+
+# COMMAND ----------
+
+features = (
+    enriched
+    .filter(F.col("pickup_borough").isNotNull())
+    .filter(F.col("dropoff_borough").isNotNull())
+    .filter(F.col("trip_duration_min").between(2, 120))
+    .filter(F.col("trip_distance").between(0.2, 50))
+    .select(
+        F.col("trip_duration_min").alias("target_duration_min"),
+        "PULocationID", "DOLocationID",
+        "pickup_borough", "dropoff_borough",
+        "pickup_hour", "pickup_dayofweek",
+        F.col("is_weekend").cast("int").alias("is_weekend"),
+        F.col("is_rush_hour").cast("int").alias("is_rush_hour"),
+        "passenger_count", "trip_distance", "RatecodeID",
+        F.col("tpep_pickup_datetime").alias("pickup_ts"),
+        "pickup_date",
+    )
+)
+
+# COMMAND ----------
+
+(
+    features.write.format("delta").mode("overwrite")
+    .option("overwriteSchema", "true")
+    .save(PATH_ML_FEATURES)
+)
+
+print(f"✓ ML features escrito en {PATH_ML_FEATURES}")
+
+# COMMAND ----------
+
+display(
+    spark.read.format("delta").load(PATH_ML_FEATURES)
+    .agg(
+        F.count("*").alias("rows"),
+        F.round(F.avg("target_duration_min"), 2).alias("avg_duration"),
+        F.round(F.stddev("target_duration_min"), 2).alias("sd_duration"),
+        F.round(F.avg("trip_distance"), 2).alias("avg_distance"),
+    )
+)

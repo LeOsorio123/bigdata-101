@@ -10,7 +10,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 1. Read from Silver
+# MAGIC ## 1. Configuration and Read from Silver
 
 # COMMAND ----------
 
@@ -19,25 +19,35 @@ from pyspark.sql.functions import (
     percentile_approx, current_timestamp
 )
 
-# ─── CONFIGURE THESE VARIABLES (same as Bronze/Silver) ───────────────────────
-STORAGE_ACCOUNT = "<your_storage_account>"
-CONTAINER       = "bigdata"
-ACCESS_KEY      = "<your_access_key>"
-# In production use: ACCESS_KEY = dbutils.secrets.get(scope="adls-scope", key="storage-key")
+# ─── CONFIGURE YOUR LAST NAME HERE ───────────────────────────────────────────
+CATALOG = "maestria_bd_2026_01"
+SCHEMA  = None  # <-- Change to your last name (lowercase)
+VOLUME  = "datalake"
 # ──────────────────────────────────────────────────────────────────────────────
 
-spark.conf.set(
-    f"fs.azure.account.key.{STORAGE_ACCOUNT}.dfs.core.windows.net",
-    ACCESS_KEY
-)
+# Unity Catalog volume path
+VOLUME_PATH = f"/Volumes/{CATALOG}/{SCHEMA}/{VOLUME}"
 
-ADLS_BASE        = f"abfss://{CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net"
-SILVER_TABLE     = "medallion.silver_travel_times"
-GOLD_PATH_CITY   = f"{ADLS_BASE}/medallion/gold/city_metrics"
-GOLD_PATH_ROUTES = f"{ADLS_BASE}/medallion/gold/top_routes"
+# Paths
+SILVER_PATH      = f"{VOLUME_PATH}/medallion/silver/travel_times"
+GOLD_PATH_CITY   = f"{VOLUME_PATH}/medallion/gold/city_metrics"
+GOLD_PATH_ROUTES = f"{VOLUME_PATH}/medallion/gold/top_routes"
 
-df_silver = spark.table(SILVER_TABLE)
-print(f"📥 Records in Silver: {df_silver.count()}")
+# Set default catalog and schema
+spark.sql(f"USE CATALOG {CATALOG}")
+spark.sql(f"USE SCHEMA {SCHEMA}")
+
+print(f"Catalog:          {CATALOG}")
+print(f"Schema:           {SCHEMA}")
+print(f"Silver path:      {SILVER_PATH}")
+print(f"Gold city path:   {GOLD_PATH_CITY}")
+print(f"Gold routes path: {GOLD_PATH_ROUTES}")
+
+# COMMAND ----------
+
+# Read from Silver (Delta in the volume)
+df_silver = spark.read.format("delta").load(SILVER_PATH)
+print(f"Records in Silver: {df_silver.count()}")
 
 # COMMAND ----------
 
@@ -74,13 +84,17 @@ df_city_metrics.show()
     .save(GOLD_PATH_CITY)
 )
 
+print(f"Gold city metrics written to: {GOLD_PATH_CITY}")
+
+# Register as a table in Unity Catalog
+GOLD_TABLE_CITY = "gold_city_metrics"
 spark.sql(f"""
-CREATE TABLE IF NOT EXISTS medallion.gold_city_metrics
+CREATE TABLE IF NOT EXISTS {GOLD_TABLE_CITY}
 USING DELTA
 LOCATION '{GOLD_PATH_CITY}'
 """)
 
-print("✅ Gold table: medallion.gold_city_metrics")
+print(f"Table registered: {CATALOG}.{SCHEMA}.{GOLD_TABLE_CITY}")
 
 # COMMAND ----------
 
@@ -116,13 +130,17 @@ df_top_routes.show(20, truncate=False)
     .save(GOLD_PATH_ROUTES)
 )
 
+print(f"Gold top routes written to: {GOLD_PATH_ROUTES}")
+
+# Register as a table in Unity Catalog
+GOLD_TABLE_ROUTES = "gold_top_routes"
 spark.sql(f"""
-CREATE TABLE IF NOT EXISTS medallion.gold_top_routes
+CREATE TABLE IF NOT EXISTS {GOLD_TABLE_ROUTES}
 USING DELTA
 LOCATION '{GOLD_PATH_ROUTES}'
 """)
 
-print("✅ Gold table: medallion.gold_top_routes")
+print(f"Table registered: {CATALOG}.{SCHEMA}.{GOLD_TABLE_ROUTES}")
 
 # COMMAND ----------
 
@@ -131,29 +149,28 @@ print("✅ Gold table: medallion.gold_top_routes")
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC -- Dashboard: metrics per city
-# MAGIC SELECT city, total_routes, avg_travel_min,
-# MAGIC        min_travel_sec, max_travel_sec, avg_uncertainty_sec
-# MAGIC FROM medallion.gold_city_metrics
-# MAGIC ORDER BY avg_travel_min DESC
+# Dashboard: metrics per city
+df_city = spark.read.format("delta").load(GOLD_PATH_CITY)
+df_city.orderBy(col("avg_travel_min").desc()).show()
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC -- Dashboard: slowest routes in Bogota
-# MAGIC SELECT rank, origin_name, destination_name, travel_minutes
-# MAGIC FROM medallion.gold_top_routes
-# MAGIC WHERE city = 'Bogota'
-# MAGIC ORDER BY rank
+# Dashboard: slowest routes in Bogota
+df_routes = spark.read.format("delta").load(GOLD_PATH_ROUTES)
+(df_routes
+    .filter(col("city") == "Bogota")
+    .orderBy("rank")
+    .select("rank", "origin_name", "destination_name", "travel_minutes")
+    .show(truncate=False)
+)
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## Key takeaways for Gold
 # MAGIC
-# MAGIC - ✅ Business aggregations (averages, rankings, KPIs)
-# MAGIC - ✅ Tables optimized for fast queries
-# MAGIC - ✅ Ready to connect with Power BI, Tableau, etc.
-# MAGIC - ✅ Each table has a clear business purpose
-# MAGIC - ✅ Executives don't need to know about Bronze or Silver
+# MAGIC - Business aggregations (averages, rankings, KPIs)
+# MAGIC - Tables optimized for fast queries
+# MAGIC - Ready to connect with Power BI, Tableau, etc.
+# MAGIC - Each table has a clear business purpose
+# MAGIC - Executives don't need to know about Bronze or Silver

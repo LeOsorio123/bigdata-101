@@ -1,4 +1,5 @@
 -- Heatmap: demanda hora × día de semana
+-- Requiere vista temporal: spark.read.format("delta").load(PATH_GOLD_HOURLY_DEMAND).createOrReplaceTempView("hourly_demand")
 SELECT
   pickup_dayofweek,
   CASE pickup_dayofweek
@@ -8,7 +9,7 @@ SELECT
   END AS day_name,
   pickup_hour,
   SUM(trips) AS trips
-FROM IDENTIFIER(:catalog || '.gold.hourly_demand')
+FROM hourly_demand
 WHERE pickup_borough = COALESCE(:borough, pickup_borough)
 GROUP BY pickup_dayofweek, pickup_hour
 ORDER BY pickup_dayofweek, pickup_hour;

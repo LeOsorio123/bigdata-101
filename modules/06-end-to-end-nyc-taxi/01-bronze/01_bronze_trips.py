@@ -3,7 +3,7 @@
 # MAGIC # Bronze: ingesta de viajes desde el landing compartido
 # MAGIC
 # MAGIC Lee los Parquet que el profesor depositó en el landing y los persiste
-# MAGIC como tabla Delta managed en TU catálogo de Unity Catalog.
+# MAGIC como Delta en el Volume del estudiante (acceso por path, sin tablas).
 
 # COMMAND ----------
 
@@ -12,8 +12,6 @@
 # COMMAND ----------
 
 from pyspark.sql import functions as F
-
-spark.sql(f"USE CATALOG {CATALOG}")
 
 # COMMAND ----------
 
@@ -32,7 +30,7 @@ print(f"Leyendo desde: {LANDING_TRIPS_PATH}")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 2. Escribir a Delta managed en Unity Catalog
+# MAGIC ## 2. Escribir a Delta en el Volume
 
 # COMMAND ----------
 
@@ -41,10 +39,10 @@ print(f"Leyendo desde: {LANDING_TRIPS_PATH}")
     .format("delta")
     .mode("overwrite")
     .option("overwriteSchema", "true")
-    .saveAsTable(T_BRONZE_TRIPS)
+    .save(PATH_BRONZE_TRIPS)
 )
 
-print(f"✓ Bronze escrito en {T_BRONZE_TRIPS}")
+print(f"✓ Bronze escrito en {PATH_BRONZE_TRIPS}")
 
 # COMMAND ----------
 
@@ -53,7 +51,7 @@ print(f"✓ Bronze escrito en {T_BRONZE_TRIPS}")
 
 # COMMAND ----------
 
-bronze = spark.table(T_BRONZE_TRIPS)
+bronze = spark.read.format("delta").load(PATH_BRONZE_TRIPS)
 
 bronze.agg(
     F.count("*").alias("total_rows"),
@@ -71,8 +69,7 @@ bronze.agg(
 
 # COMMAND ----------
 
-display(spark.sql(f"DESCRIBE DETAIL {T_BRONZE_TRIPS}"))
+from delta.tables import DeltaTable
 
-# COMMAND ----------
-
-display(spark.sql(f"DESCRIBE HISTORY {T_BRONZE_TRIPS}"))
+dt = DeltaTable.forPath(spark, PATH_BRONZE_TRIPS)
+display(dt.history())

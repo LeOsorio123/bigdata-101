@@ -2,9 +2,8 @@
 # MAGIC %md
 # MAGIC # Setup: catálogo personal en Unity Catalog
 # MAGIC
-# MAGIC Crea el catálogo del estudiante con sus esquemas Medallion y un volume
-# MAGIC para archivos no tabulares. Cada catálogo vive en la External Location
-# MAGIC compartida `nyctaxi_lake`, en su propia subcarpeta.
+# MAGIC Crea el catálogo del estudiante con sus esquemas y un Volume
+# MAGIC `datalake` donde se almacenarán las capas medallion como Delta.
 # MAGIC
 # MAGIC ## Antes de correr
 # MAGIC Abrir `config.py` y poner tus iniciales en `USER_INITIALS`.
@@ -17,9 +16,6 @@
 
 # MAGIC %md
 # MAGIC ## 1. Usar catálogo del estudiante
-# MAGIC
-# MAGIC Si el catálogo ya fue creado por el admin/profesor, simplemente lo activamos.
-# MAGIC Si no existe, intentamos crearlo (requiere External Location configurada).
 
 # COMMAND ----------
 
@@ -59,7 +55,20 @@ for schema, comment in [
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 3. Volume para MLflow (clústeres Shared/Serverless)
+# MAGIC ## 3. Volume para datos medallion (Delta por path)
+
+# COMMAND ----------
+
+spark.sql(f"""
+    CREATE VOLUME IF NOT EXISTS {CATALOG}.{SCHEMA_BRONZE}.{VOLUME_NAME}
+      COMMENT 'Volume para almacenar capas medallion como Delta (bronze/silver/gold/ml)'
+""")
+print(f"  ✓ Volume: {VOLUME_BASE}")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## 4. Volume para MLflow (clústeres Shared/Serverless)
 
 # COMMAND ----------
 
@@ -67,12 +76,12 @@ spark.sql(f"""
     CREATE VOLUME IF NOT EXISTS {CATALOG}.{SCHEMA_ML}.{ML_VOLUME_NAME}
       COMMENT 'Directorio temporal para MLflow Spark models'
 """)
-print(f"  ✓ Volume: {ML_VOLUME_PATH}")
+print(f"  ✓ Volume MLflow: {ML_VOLUME_PATH}")
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 4. Verificación
+# MAGIC ## 5. Verificación
 
 # COMMAND ----------
 

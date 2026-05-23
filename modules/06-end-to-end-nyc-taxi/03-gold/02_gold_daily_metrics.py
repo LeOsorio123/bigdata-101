@@ -8,25 +8,48 @@
 
 # COMMAND ----------
 
-spark.sql(f"USE CATALOG {CATALOG}")
+from pyspark.sql import functions as F
 
-spark.sql(f"""
-    CREATE OR REPLACE TABLE {T_GOLD_DAILY_METRICS} AS
-    SELECT pickup_date,
-      COUNT(*) AS total_trips,
-      ROUND(SUM(total_amount), 2) AS total_revenue,
-      ROUND(AVG(total_amount), 2) AS avg_fare,
-      ROUND(AVG(trip_distance), 2) AS avg_distance_mi,
-      ROUND(AVG(trip_duration_min), 2) AS avg_duration_min,
-      ROUND(AVG(avg_speed_mph), 2) AS avg_speed_mph,
-      ROUND(SUM(tip_amount), 2) AS total_tips,
-      ROUND(AVG(tip_rate) * 100, 2) AS avg_tip_pct,
-      COUNT(DISTINCT PULocationID) AS unique_pickup_zones
-    FROM {T_SILVER_TRIPS_ENRICHED}
-    GROUP BY pickup_date ORDER BY pickup_date
-""")
+# COMMAND ----------
 
-display(spark.sql(f"SELECT * FROM {T_GOLD_DAILY_METRICS} ORDER BY pickup_date DESC LIMIT 30"))
+enriched = spark.read.format("delta").load(PATH_SILVER_TRIPS_ENRICHED)
+
+# COMMAND ----------
+
+daily = (
+    enriched
+    .groupBy("pickup_date")
+    .agg(
+        F.count("*").alias("total_trips"),
+        F.round(F.sum("total_amount"), 2).alias("total_revenue"),
+        F.round(F.avg("total_amount"), 2).alias("avg_fare"),
+        F.round(F.avg("trip_distance"), 2).alias("avg_distance_mi"),
+        F.round(F.avg("trip_duration_min"), 2).alias("avg_duration_min"),
+        F.round(F.avg("avg_speed_mph"), 2).alias("avg_speed_mph"),
+        F.round(F.sum("tip_amount"), 2).alias("total_tips"),
+        F.round(F.avg("tip_rate") * 100, 2).alias("avg_tip_pct"),
+        F.countDistinct("PULocationID").alias("unique_pickup_zones"),
+    )
+    .orderBy("pickup_date")
+)
+
+# COMMAND ----------
+
+(
+    daily.write.format("delta").mode("overwrite")
+    .option("overwriteSchema", "true")
+    .save(PATH_GOLD_DAILY_METRICS)
+)
+
+print(f"✓ Gold daily metrics escrito en {PATH_GOLD_DAILY_METRICS}")
+
+# COMMAND ----------
+
+display(
+    spark.read.format("delta").load(PATH_GOLD_DAILY_METRICS)
+    .orderBy(F.desc("pickup_date"))
+    .limit(30)
+)
 
 # COMMAND ----------
 
@@ -35,14 +58,20 @@ display(spark.sql(f"SELECT * FROM {T_GOLD_DAILY_METRICS} ORDER BY pickup_date DE
 
 # COMMAND ----------
 
-display(spark.sql(f"""
-    WITH stats AS (
-      SELECT AVG(total_trips) AS avg_trips, STDDEV(total_trips) AS sd_trips
-      FROM {T_GOLD_DAILY_METRICS}
-    )
-    SELECT d.pickup_date, d.total_trips,
-      ROUND((d.total_trips - s.avg_trips) / s.sd_trips, 2) AS z_score
-    FROM {T_GOLD_DAILY_METRICS} d, stats s
-    WHERE ABS((d.total_trips - s.avg_trips) / s.sd_trips) > 2
-    ORDER BY z_score
-"""))
+from pyspark.sql import Window
+
+daily_df = spark.read.format("delta").load(PATH_GOLD_DAILY_METRICS)
+
+stats = daily_df.agg(
+    F.avg("total_trips").alias("avg_trips"),
+    F.stddev("total_trips").alias("sd_trips"),
+).first()
+
+anomalies = (
+    daily_df
+    .withColumn("z_score", F.round((F.col("total_trips") - stats["avg_trips"]) / stats["sd_trips"], 2))
+    .filter(F.abs(F.col("z_score")) > 2)
+    .orderBy("z_score")
+)
+
+display(anomalies.select("pickup_date", "total_trips", "z_score"))

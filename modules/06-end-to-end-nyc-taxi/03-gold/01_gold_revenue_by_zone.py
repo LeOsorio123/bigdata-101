@@ -8,23 +8,43 @@
 
 # COMMAND ----------
 
-spark.sql(f"USE CATALOG {CATALOG}")
+from pyspark.sql import functions as F
 
-spark.sql(f"""
-    CREATE OR REPLACE TABLE {T_GOLD_REVENUE_BY_ZONE} AS
-    SELECT pickup_borough, pickup_zone, PULocationID,
-      COUNT(*) AS total_trips,
-      ROUND(SUM(total_amount), 2) AS total_revenue,
-      ROUND(AVG(total_amount), 2) AS avg_fare,
-      ROUND(SUM(tip_amount), 2) AS total_tips,
-      ROUND(AVG(tip_rate) * 100, 2) AS avg_tip_pct,
-      ROUND(AVG(trip_distance), 2) AS avg_distance_mi,
-      ROUND(AVG(trip_duration_min), 2) AS avg_duration_min
-    FROM {T_SILVER_TRIPS_ENRICHED}
-    WHERE pickup_zone IS NOT NULL
-    GROUP BY pickup_borough, pickup_zone, PULocationID
-""")
+# COMMAND ----------
 
-spark.sql(f"OPTIMIZE {T_GOLD_REVENUE_BY_ZONE} ZORDER BY (pickup_borough)")
+enriched = spark.read.format("delta").load(PATH_SILVER_TRIPS_ENRICHED)
 
-display(spark.sql(f"SELECT * FROM {T_GOLD_REVENUE_BY_ZONE} ORDER BY total_revenue DESC LIMIT 20"))
+# COMMAND ----------
+
+revenue = (
+    enriched
+    .filter(F.col("pickup_zone").isNotNull())
+    .groupBy("pickup_borough", "pickup_zone", "PULocationID")
+    .agg(
+        F.count("*").alias("total_trips"),
+        F.round(F.sum("total_amount"), 2).alias("total_revenue"),
+        F.round(F.avg("total_amount"), 2).alias("avg_fare"),
+        F.round(F.sum("tip_amount"), 2).alias("total_tips"),
+        F.round(F.avg("tip_rate") * 100, 2).alias("avg_tip_pct"),
+        F.round(F.avg("trip_distance"), 2).alias("avg_distance_mi"),
+        F.round(F.avg("trip_duration_min"), 2).alias("avg_duration_min"),
+    )
+)
+
+# COMMAND ----------
+
+(
+    revenue.write.format("delta").mode("overwrite")
+    .option("overwriteSchema", "true")
+    .save(PATH_GOLD_REVENUE_BY_ZONE)
+)
+
+print(f"✓ Gold revenue by zone escrito en {PATH_GOLD_REVENUE_BY_ZONE}")
+
+# COMMAND ----------
+
+display(
+    spark.read.format("delta").load(PATH_GOLD_REVENUE_BY_ZONE)
+    .orderBy(F.desc("total_revenue"))
+    .limit(20)
+)

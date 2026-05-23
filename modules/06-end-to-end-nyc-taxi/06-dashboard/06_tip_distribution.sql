@@ -1,4 +1,5 @@
 -- Distribución del porcentaje de propina (bucketizado)
+-- Requiere vista temporal: spark.read.format("delta").load(PATH_SILVER_TRIPS_ENRICHED).createOrReplaceTempView("trips_enriched")
 SELECT
   CASE
     WHEN tip_rate = 0              THEN '0%'
@@ -10,7 +11,7 @@ SELECT
   END AS tip_bucket,
   COUNT(*) AS trips,
   ROUND(AVG(fare_amount), 2) AS avg_fare
-FROM IDENTIFIER(:catalog || '.silver.trips_enriched')
+FROM trips_enriched
 WHERE payment_type = 1   -- Solo tarjeta (cash tips no se registran)
   AND pickup_date BETWEEN :start_date AND :end_date
 GROUP BY tip_bucket

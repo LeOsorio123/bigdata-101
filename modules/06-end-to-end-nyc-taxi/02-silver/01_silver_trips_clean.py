@@ -10,11 +10,9 @@
 
 from pyspark.sql import functions as F
 
-spark.sql(f"USE CATALOG {CATALOG}")
-
 # COMMAND ----------
 
-bronze = spark.table(T_BRONZE_TRIPS)
+bronze = spark.read.format("delta").load(PATH_BRONZE_TRIPS)
 
 trips = bronze.withColumn(
     "trip_duration_min",
@@ -55,20 +53,20 @@ rejected_df = tagged.filter(~is_valid).withColumn("rejected_at", F.current_times
 (
     valid_df.write.format("delta").mode("overwrite")
     .option("overwriteSchema", "true")
-    .saveAsTable(T_SILVER_TRIPS)
+    .save(PATH_SILVER_TRIPS)
 )
 
 (
     rejected_df.write.format("delta").mode("overwrite")
     .option("overwriteSchema", "true")
-    .saveAsTable(T_SILVER_REJECTED)
+    .save(PATH_SILVER_REJECTED)
 )
 
 # COMMAND ----------
 
 total_bronze = bronze.count()
-total_silver = spark.table(T_SILVER_TRIPS).count()
-total_rejected = spark.table(T_SILVER_REJECTED).count()
+total_silver = spark.read.format("delta").load(PATH_SILVER_TRIPS).count()
+total_rejected = spark.read.format("delta").load(PATH_SILVER_REJECTED).count()
 
 print(f"Bronze total:    {total_bronze:>12,}")
 print(f"Silver válidos:  {total_silver:>12,}  ({100 * total_silver / total_bronze:.2f}%)")

@@ -154,6 +154,15 @@ df_bronze.printSchema()
 
 print(f"Data written to: {BRONZE_PATH}")
 
+# Register as a table in Unity Catalog pointing to the Delta location
+spark.sql(f"""
+CREATE TABLE IF NOT EXISTS {BRONZE_TABLE}
+USING DELTA
+LOCATION '{BRONZE_PATH}'
+""")
+
+print(f"Table registered: {CATALOG}.{SCHEMA}.{BRONZE_TABLE}")
+
 # COMMAND ----------
 
 # MAGIC %md

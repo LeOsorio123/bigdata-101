@@ -155,6 +155,16 @@ print(f"Rejected records:        {rejected}")
 
 print(f"Silver written to: {SILVER_PATH}")
 
+# Register as a table in Unity Catalog pointing to the Delta location
+SILVER_TABLE = "silver_travel_times"
+spark.sql(f"""
+CREATE TABLE IF NOT EXISTS {SILVER_TABLE}
+USING DELTA
+LOCATION '{SILVER_PATH}'
+""")
+
+print(f"Table registered: {CATALOG}.{SCHEMA}.{SILVER_TABLE}")
+
 # COMMAND ----------
 
 # MAGIC %md
