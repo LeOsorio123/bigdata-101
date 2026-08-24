@@ -2,17 +2,13 @@
 # MAGIC %md
 # MAGIC # Silver streaming
 # MAGIC
-# MAGIC Lee en streaming desde la tabla Delta de Bronze y aplica las mismas
+# MAGIC Lee en streaming desde el Delta de Bronze streaming y aplica las mismas
 # MAGIC reglas de limpieza que el Silver batch. Delta es streaming-source
 # MAGIC nativo: cada commit nuevo en Bronze se propaga automáticamente.
 
 # COMMAND ----------
 
 # MAGIC %run ../00-setup/config
-
-# COMMAND ----------
-
-spark.sql(f"USE CATALOG {CATALOG}")
 
 # COMMAND ----------
 
@@ -23,7 +19,7 @@ from pyspark.sql import functions as F
 bronze_stream = (
     spark.readStream
     .format("delta")
-    .table(f"{CATALOG}.{SCHEMA_BRONZE}.yellow_trips_stream")
+    .load(PATH_STREAM_BRONZE)
 )
 
 # COMMAND ----------
@@ -47,9 +43,10 @@ cleaned = (
 stream_query = (
     cleaned.writeStream
     .format("delta")
+    .outputMode("append")
     .option("checkpointLocation", f"{CHECKPOINT_BASE}/silver_trips_stream")
     .option("mergeSchema", "true")
     .trigger(processingTime="1 minute")
     .queryName("silver_trips_stream")
-    .toTable(f"{CATALOG}.{SCHEMA_SILVER}.trips_clean_stream")
+    .start(PATH_STREAM_SILVER)
 )
