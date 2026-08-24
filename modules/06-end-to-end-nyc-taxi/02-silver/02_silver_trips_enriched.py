@@ -10,12 +10,10 @@
 
 from pyspark.sql import functions as F
 
-spark.sql(f"USE CATALOG {CATALOG}")
-
 # COMMAND ----------
 
-trips = spark.table(T_SILVER_TRIPS)
-zones = spark.table(T_BRONZE_ZONES)
+trips = spark.read.format("delta").load(PATH_SILVER_TRIPS)
+zones = spark.read.format("delta").load(PATH_BRONZE_ZONES)
 
 # COMMAND ----------
 
@@ -77,21 +75,28 @@ enriched = (
     enriched.write.format("delta").mode("overwrite")
     .option("overwriteSchema", "true")
     .partitionBy("pickup_date")
-    .saveAsTable(T_SILVER_TRIPS_ENRICHED)
+    .save(PATH_SILVER_TRIPS_ENRICHED)
 )
 
-# COMMAND ----------
-
-spark.sql(f"OPTIMIZE {T_SILVER_TRIPS_ENRICHED} ZORDER BY (PULocationID, pickup_hour)")
+print(f"✓ Silver enriched escrito en {PATH_SILVER_TRIPS_ENRICHED}")
 
 # COMMAND ----------
 
-display(spark.sql(f"""
-    SELECT pickup_borough, COUNT(*) AS trips,
-      ROUND(AVG(total_amount), 2) AS avg_fare,
-      ROUND(AVG(tip_rate) * 100, 1) AS avg_tip_pct
-    FROM {T_SILVER_TRIPS_ENRICHED}
-    WHERE pickup_borough IS NOT NULL
-    GROUP BY pickup_borough
-    ORDER BY trips DESC
-"""))
+# MAGIC %md
+# MAGIC ## 3. Verificación
+
+# COMMAND ----------
+
+enriched_check = spark.read.format("delta").load(PATH_SILVER_TRIPS_ENRICHED)
+
+display(
+    enriched_check
+    .filter(F.col("pickup_borough").isNotNull())
+    .groupBy("pickup_borough")
+    .agg(
+        F.count("*").alias("trips"),
+        F.round(F.avg("total_amount"), 2).alias("avg_fare"),
+        F.round(F.avg("tip_rate") * 100, 1).alias("avg_tip_pct"),
+    )
+    .orderBy(F.desc("trips"))
+)

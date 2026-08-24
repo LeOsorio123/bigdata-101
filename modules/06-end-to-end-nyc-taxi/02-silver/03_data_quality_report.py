@@ -8,31 +8,44 @@
 
 # COMMAND ----------
 
-spark.sql(f"USE CATALOG {CATALOG}")
+from pyspark.sql import functions as F
 
 # COMMAND ----------
 
-display(spark.sql(f"""
-    SELECT COUNT(*) AS total_rejected,
-      SUM(CAST(NOT valid_distance AS INT))   AS fail_distance,
-      SUM(CAST(NOT valid_fare AS INT))       AS fail_fare,
-      SUM(CAST(NOT valid_total AS INT))      AS fail_total,
-      SUM(CAST(NOT valid_passengers AS INT)) AS fail_passengers,
-      SUM(CAST(NOT valid_dropoff AS INT))    AS fail_dropoff,
-      SUM(CAST(NOT valid_duration AS INT))   AS fail_duration
-    FROM {T_SILVER_REJECTED}
-"""))
+rejected = spark.read.format("delta").load(PATH_SILVER_REJECTED)
+bronze = spark.read.format("delta").load(PATH_BRONZE_TRIPS)
+silver = spark.read.format("delta").load(PATH_SILVER_TRIPS)
 
 # COMMAND ----------
 
-display(spark.sql(f"""
-    WITH counts AS (
-      SELECT
-        (SELECT COUNT(*) FROM {T_BRONZE_TRIPS})    AS bronze_total,
-        (SELECT COUNT(*) FROM {T_SILVER_TRIPS})    AS silver_valid,
-        (SELECT COUNT(*) FROM {T_SILVER_REJECTED}) AS silver_rejected
+# MAGIC %md
+# MAGIC ## Detalle de rechazos por regla
+
+# COMMAND ----------
+
+display(
+    rejected.agg(
+        F.count("*").alias("total_rejected"),
+        F.sum(F.cast(~F.col("valid_distance"), "int")).alias("fail_distance"),
+        F.sum(F.cast(~F.col("valid_fare"), "int")).alias("fail_fare"),
+        F.sum(F.cast(~F.col("valid_total"), "int")).alias("fail_total"),
+        F.sum(F.cast(~F.col("valid_passengers"), "int")).alias("fail_passengers"),
+        F.sum(F.cast(~F.col("valid_dropoff"), "int")).alias("fail_dropoff"),
+        F.sum(F.cast(~F.col("valid_duration"), "int")).alias("fail_duration"),
     )
-    SELECT *, ROUND(100.0 * silver_valid / bronze_total, 2) AS pct_valid,
-      ROUND(100.0 * silver_rejected / bronze_total, 2) AS pct_rejected
-    FROM counts
-"""))
+)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Resumen de pipeline
+
+# COMMAND ----------
+
+bronze_total = bronze.count()
+silver_valid = silver.count()
+silver_rejected = rejected.count()
+
+print(f"Bronze total:    {bronze_total:>12,}")
+print(f"Silver válidos:  {silver_valid:>12,}  ({100.0 * silver_valid / bronze_total:.2f}%)")
+print(f"Silver rechazos: {silver_rejected:>12,}  ({100.0 * silver_rejected / bronze_total:.2f}%)")
