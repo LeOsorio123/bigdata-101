@@ -24,7 +24,6 @@ dbutils.widgets.text("run_id", "", "Run ID del training")
 import mlflow
 from mlflow.tracking import MlflowClient
 
-spark.sql(f"USE CATALOG {CATALOG}")
 mlflow.set_registry_uri("databricks-uc")
 
 # COMMAND ----------

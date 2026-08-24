@@ -2,17 +2,13 @@
 # MAGIC %md
 # MAGIC # Bronze streaming: Auto Loader en modo continuo
 # MAGIC
-# MAGIC Mismo código que el Bronze batch, pero con trigger de procesamiento
+# MAGIC Mismo concepto que el Bronze batch, pero con trigger de procesamiento
 # MAGIC continuo. Cada 30 segundos Auto Loader revisa el landing zone y
-# MAGIC procesa lo que haya nuevo.
+# MAGIC procesa lo que haya nuevo. Escribe Delta al Volume.
 
 # COMMAND ----------
 
 # MAGIC %run ../00-setup/config
-
-# COMMAND ----------
-
-spark.sql(f"USE CATALOG {CATALOG}")
 
 # COMMAND ----------
 
@@ -24,25 +20,25 @@ raw_stream = (
     spark.readStream
     .format("cloudFiles")
     .option("cloudFiles.format", "parquet")
-    .option("cloudFiles.schemaLocation", f"{SCHEMA_BASE}/yellow_trips_stream")
+    .option("cloudFiles.schemaLocation", f"{CHECKPOINT_BASE}/schema_bronze_stream")
     .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
     .option("cloudFiles.inferColumnTypes", "true")
-    .load(LANDING_PATH)
+    .load(LANDING_TRIPS_PATH)
     .withColumn("_ingested_at", F.current_timestamp())
     .withColumn("_source_file", F.col("_metadata.file_path"))
 )
 
 # COMMAND ----------
 
-# Trigger processingTime → cada 30s revisa archivos nuevos
 stream_query = (
     raw_stream.writeStream
     .format("delta")
-    .option("checkpointLocation", f"{CHECKPOINT_BASE}/yellow_trips_stream")
+    .outputMode("append")
+    .option("checkpointLocation", f"{CHECKPOINT_BASE}/bronze_trips_stream")
     .option("mergeSchema", "true")
     .trigger(processingTime="30 seconds")
     .queryName("bronze_yellow_trips_stream")
-    .toTable(f"{CATALOG}.{SCHEMA_BRONZE}.yellow_trips_stream")
+    .start(PATH_STREAM_BRONZE)
 )
 
 # COMMAND ----------
