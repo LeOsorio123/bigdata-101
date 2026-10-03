@@ -9,10 +9,13 @@ def sum_reducer(key,values):
 def file_word_mapper(record):
     """Emit (filename, normalized word) for every word in a file line."""
     filename,line=record
-    for word in words(line): yield filename,word
+    normalized=words(line)
+    if not normalized:
+        yield filename,None
+    for word in normalized: yield filename,word
 def unique_reducer(filename, words_list):
     """Count distinct normalized words for one file."""
-    return len(set(words_list))
+    return len(set(w for w in words_list if w is not None))
 def index_mapper(record):
     """Map each word to the file it came from."""
     filename,line=record
