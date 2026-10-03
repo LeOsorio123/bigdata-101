@@ -1,5 +1,7 @@
 """Standard-library tests for all twelve functional exercises."""
 import unittest
+import tempfile
+from pathlib import Path
 from common import mapreduce,source_files,lines_from_files
 import level1 as a
 import level2 as b
@@ -22,6 +24,22 @@ class SolutionTests(unittest.TestCase):
         self.assertEqual(mapreduce([('a.txt','Cat cat dog'),('b.txt','CAT')],b.file_word_mapper,b.unique_reducer),{'a.txt':2,'b.txt':1})
     def test_2_3(self):
         self.assertEqual(mapreduce([('a.txt','cat cat'),('b.txt','cat dog')],b.index_mapper,b.index_reducer),{'cat':['a.txt','b.txt'],'dog':['b.txt']})
+    def test_empty_file_and_blank_content(self):
+        self.assertEqual(mapreduce([('empty.txt','')],b.file_word_mapper,b.unique_reducer),{'empty.txt':0})
+        self.assertEqual(mapreduce([('empty.txt','')],b.index_mapper,b.index_reducer),{})
+        with tempfile.TemporaryDirectory() as folder:
+            empty=Path(folder)/'empty.txt'
+            empty.touch()
+            self.assertEqual(list(lines_from_files([empty])),[('empty.txt','')])
+    def test_empty_inputs_for_all_levels(self):
+        cases=[(a.long_words_mapper,a.sum_values),(a.product_mapper,a.mean_reducer),
+               (a.temp_mapper,a.temp_reducer),(a.category_mapper,a.category_reducer),
+               (b.length_mapper,b.sum_reducer),(b.file_word_mapper,b.unique_reducer),
+               (b.index_mapper,b.index_reducer),(c.bigram_mapper,c.sum_reducer),
+               (c.event_mapper,c.event_reducer),(c.sensor_mapper,c.sensor_reducer)]
+        for mapper,reducer in cases:
+            with self.subTest(mapper=mapper.__name__):
+                self.assertEqual(mapreduce([],mapper,reducer),{})
     def test_files_present(self):
         self.assertTrue(source_files())
         self.assertTrue(list(lines_from_files(source_files())))
