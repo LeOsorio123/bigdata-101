@@ -9,7 +9,7 @@ Solutions for every exercise in `modules/01-mapreduce/01-pure-python/EXERCISES.m
 | Level 1 | 1.1 character count; 1.2 long words; 1.3 mean sales; 1.4 temperature statistics; 1.5 category statistics | `level1.py` |
 | Level 2 | 2.1 word-length distribution; 2.2 unique words per file; 2.3 inverted index | `level2.py` |
 | Level 3 | 3.1 top-N; 3.2 bigrams; 3.3 web sessions; 3.4 anomaly detection | `level3.py` |
-| Performance | P.1 sequential vs. parallel; P.2 HDFS block sizes 4, 16 and 64 KB | `performance.py` |
+| Performance | P.1 sequential vs. parallel; P.2 HDFS block sizes 4, 16 and 64 KB | `performance.py` and the benchmark extension in `03-distributed-simulation/distributed_mapreduce.py` |
 
 `common.py` provides shared helpers. All the exercise mappers and reducers include docstrings. The file-loading and distinct-word functions handle empty files as well as ordinary text.
 
@@ -30,7 +30,7 @@ The automated tests cover all 12 programming exercises and additional edge cases
 After running `performance.py`, save the actual console output or copy these values into your submission notes. **Times will vary by machine and run.**
 
 - P.1 book file and number of lines; sequential time; parallel time; whether the results match.
-- P.2 for **each** of 4, 16 and 64 KB: number of HDFS blocks, upload time, processing time, and total execution time (upload + processing). Also confirm that the word counts match. The simulated HDFS and original distributed MapReduce implementation are used without editing the professor's source files.
+- P.2 for **each** of 4, 16 and 64 KB: number of HDFS blocks, upload time, processing time, and total execution time (upload + processing). Also confirm that the word counts match. The student's fork adds an optional benchmark function to `03-distributed-simulation/distributed_mapreduce.py`, without changing its existing execution logic. The professor's GitLab repository remains untouched.
 
 Do not infer from a single trial that parallelism or one block size is universally faster. These are measurements of this particular dataset, resource allocation and implementation.
 
