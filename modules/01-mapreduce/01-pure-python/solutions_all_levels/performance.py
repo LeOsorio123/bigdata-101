@@ -1,14 +1,12 @@
 """Performance tasks P.1 and P.2, using the instructor's engines and stdlib."""
 import sys
-import tempfile
 import time
 from common import BASE, REPO, mapreduce
 
 DIST = BASE / '03-distributed-simulation'
 sys.path.insert(0, str(DIST))
 from parallel_mapreduce import parallel_mapreduce, word_mapper, word_reducer
-from simulated_hdfs import SimulatedHDFS
-from distributed_mapreduce import distributed_mapreduce_from_hdfs
+from distributed_mapreduce import benchmark_block_sizes
 
 
 def book_lines():
@@ -42,35 +40,13 @@ def sequential_parallel():
 
 
 def block_sizes():
-    """P.2: report block count, upload, processing and total times for each size."""
-    files, data = book_lines()
+    """P.2: invoke the benchmarking extension in distributed_mapreduce.py."""
+    files, _ = book_lines()
     source = files[0]
+    with source.open(encoding='utf-8') as stream:
+        data = [line.rstrip('\n') for line in stream if line.strip()]
     expected = mapreduce(data, word_mapper, word_reducer)
-    outcomes = []
-    for size in (4096, 16384, 65536):
-        with tempfile.TemporaryDirectory(prefix='hdfs_blocks_') as temp_dir:
-            hdfs = SimulatedHDFS(base_dir=temp_dir, block_size=size,
-                                 replication=1, num_nodes=2)
-            start_total = time.perf_counter()
-            hdfs.put(str(source), '/book.txt')
-            upload_seconds = time.perf_counter() - start_total
-            blocks = hdfs.get_blocks('/book.txt')
-            start_processing = time.perf_counter()
-            result = distributed_mapreduce_from_hdfs(
-                hdfs, '/book.txt', word_mapper, word_reducer,
-                num_mappers=2, num_reducers=2
-            )
-            processing_seconds = time.perf_counter() - start_processing
-            total_seconds = time.perf_counter() - start_total
-            if len(files) == 1:
-                assert result == expected, f'Mismatched counts at {size} bytes'
-            print(f'P.2 block={size} bytes; blocks={len(blocks)}; '
-                  f'upload={upload_seconds:.6f}s; '
-                  f'processing={processing_seconds:.6f}s; '
-                  f'total={total_seconds:.6f}s; unique_words={len(result)}')
-            outcomes.append((size, len(blocks), upload_seconds,
-                             processing_seconds, total_seconds))
-    return outcomes
+    return benchmark_block_sizes(source, expected=expected)
 
 
 if __name__ == '__main__':
