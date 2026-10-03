@@ -95,6 +95,42 @@ def word_reducer(key, values):
     return sum(values)
 
 
+def benchmark_block_sizes(file_path, expected=None, sizes=(4096, 16384, 65536)):
+    """Compare HDFS block counts and end-to-end processing time for P.2.
+
+    Reads identical source data for each experiment, preserving the original
+    distributed_mapreduce_from_hdfs implementation and changing block size only.
+    """
+    import tempfile
+    import time
+
+    rows = []
+    for block_size in sizes:
+        with tempfile.TemporaryDirectory(prefix="mapreduce_hdfs_") as temp_dir:
+            hdfs = SimulatedHDFS(base_dir=temp_dir, block_size=block_size,
+                                 replication=1, num_nodes=2)
+            started = time.perf_counter()
+            hdfs.put(str(file_path), "/book.txt")
+            upload_seconds = time.perf_counter() - started
+            blocks = len(hdfs.get_blocks("/book.txt"))
+            processing_start = time.perf_counter()
+            results = distributed_mapreduce_from_hdfs(
+                hdfs, "/book.txt", word_mapper, word_reducer,
+                num_mappers=2, num_reducers=2
+            )
+            processing_seconds = time.perf_counter() - processing_start
+            total_seconds = time.perf_counter() - started
+            if expected is not None:
+                assert results == expected, f"Word counts differ at {block_size} bytes"
+            print(f"P.2 block={block_size} bytes; blocks={blocks}; "
+                  f"upload={upload_seconds:.6f}s; "
+                  f"processing={processing_seconds:.6f}s; "
+                  f"total={total_seconds:.6f}s; unique_words={len(results)}")
+            rows.append((block_size, blocks, upload_seconds,
+                         processing_seconds, total_seconds))
+    return rows
+
+
 if __name__ == "__main__":
     import sys
     
