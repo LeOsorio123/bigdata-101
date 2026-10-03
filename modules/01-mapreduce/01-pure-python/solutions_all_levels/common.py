@@ -15,6 +15,10 @@ def source_files():
 def lines_from_files(paths):
     """Yield (filename, line) pairs for all supplied files."""
     for path in paths:
+        had_lines = False
         with path.open(encoding='utf-8') as stream:
             for line in stream:
+                had_lines = True
                 yield path.name, line
+        if not had_lines:
+            yield path.name, ''
