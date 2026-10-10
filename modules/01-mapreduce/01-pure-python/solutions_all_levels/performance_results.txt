@@ -1,0 +1,440 @@
+
+============================================================
+PARALLEL MAPREDUCE EXECUTION
+============================================================
+Input records: 11992
+Map tasks: 2
+Reduce tasks: 2
+============================================================
+
+[PHASE 1] MAP - Parallel Execution
+  [Map Task 0] Produced 62573 key-value pairs
+  [Map Task 1] Produced 59572 key-value pairs
+  Total: 11992 records -> 122145 key-value pairs
+  Time: 0.273s
+
+[PHASE 2] SHUFFLE & SORT
+  Grouped into 13696 unique keys
+  Partitioned across 2 reducers
+  Time: 0.023s
+
+[PHASE 3] REDUCE - Parallel Execution
+  [Reduce Task 0] Produced 6848 results
+  [Reduce Task 1] Produced 6848 results
+  Total: 13696 final results
+  Time: 0.094s
+
+============================================================
+EXECUTION SUMMARY
+============================================================
+Map phase:     0.273s (70.0%)
+Shuffle phase: 0.023s (5.9%)
+Reduce phase:  0.094s (24.1%)
+Total time:    0.389s
+============================================================
+
+P.1 files: ['The story of the universe.txt']; lines: 11992
+P.1 sequential: 0.063379s; parallel: 0.395586s; equivalent: yes
+
+[HDFS] Uploading /workspaces/bigdata-101/datasets/book/The story of the universe.txt to /book.txt
+  Block 0: 4096 bytes -> ['node_0/_book.txt_block_0']
+  Block 1: 4096 bytes -> ['node_0/_book.txt_block_1']
+  Block 2: 4096 bytes -> ['node_0/_book.txt_block_2']
+  Block 3: 4096 bytes -> ['node_1/_book.txt_block_3']
+  Block 4: 4096 bytes -> ['node_0/_book.txt_block_4']
+  Block 5: 4096 bytes -> ['node_0/_book.txt_block_5']
+  Block 6: 4096 bytes -> ['node_1/_book.txt_block_6']
+  Block 7: 4096 bytes -> ['node_0/_book.txt_block_7']
+  Block 8: 4096 bytes -> ['node_1/_book.txt_block_8']
+  Block 9: 4096 bytes -> ['node_1/_book.txt_block_9']
+  Block 10: 4096 bytes -> ['node_0/_book.txt_block_10']
+  Block 11: 4096 bytes -> ['node_1/_book.txt_block_11']
+  Block 12: 4096 bytes -> ['node_0/_book.txt_block_12']
+  Block 13: 4096 bytes -> ['node_1/_book.txt_block_13']
+  Block 14: 4096 bytes -> ['node_0/_book.txt_block_14']
+  Block 15: 4096 bytes -> ['node_0/_book.txt_block_15']
+  Block 16: 4096 bytes -> ['node_1/_book.txt_block_16']
+  Block 17: 4096 bytes -> ['node_1/_book.txt_block_17']
+  Block 18: 4096 bytes -> ['node_1/_book.txt_block_18']
+  Block 19: 4096 bytes -> ['node_1/_book.txt_block_19']
+  Block 20: 4096 bytes -> ['node_0/_book.txt_block_20']
+  Block 21: 4096 bytes -> ['node_1/_book.txt_block_21']
+  Block 22: 4096 bytes -> ['node_0/_book.txt_block_22']
+  Block 23: 4096 bytes -> ['node_0/_book.txt_block_23']
+  Block 24: 4096 bytes -> ['node_1/_book.txt_block_24']
+  Block 25: 4096 bytes -> ['node_0/_book.txt_block_25']
+  Block 26: 4096 bytes -> ['node_1/_book.txt_block_26']
+  Block 27: 4096 bytes -> ['node_0/_book.txt_block_27']
+  Block 28: 4096 bytes -> ['node_0/_book.txt_block_28']
+  Block 29: 4096 bytes -> ['node_0/_book.txt_block_29']
+  Block 30: 4096 bytes -> ['node_0/_book.txt_block_30']
+  Block 31: 4096 bytes -> ['node_1/_book.txt_block_31']
+  Block 32: 4096 bytes -> ['node_1/_book.txt_block_32']
+  Block 33: 4096 bytes -> ['node_1/_book.txt_block_33']
+  Block 34: 4096 bytes -> ['node_1/_book.txt_block_34']
+  Block 35: 4096 bytes -> ['node_0/_book.txt_block_35']
+  Block 36: 4096 bytes -> ['node_1/_book.txt_block_36']
+  Block 37: 4096 bytes -> ['node_0/_book.txt_block_37']
+  Block 38: 4096 bytes -> ['node_0/_book.txt_block_38']
+  Block 39: 4096 bytes -> ['node_0/_book.txt_block_39']
+  Block 40: 4096 bytes -> ['node_1/_book.txt_block_40']
+  Block 41: 4096 bytes -> ['node_1/_book.txt_block_41']
+  Block 42: 4096 bytes -> ['node_0/_book.txt_block_42']
+  Block 43: 4096 bytes -> ['node_1/_book.txt_block_43']
+  Block 44: 4096 bytes -> ['node_0/_book.txt_block_44']
+  Block 45: 4096 bytes -> ['node_1/_book.txt_block_45']
+  Block 46: 4096 bytes -> ['node_0/_book.txt_block_46']
+  Block 47: 4096 bytes -> ['node_1/_book.txt_block_47']
+  Block 48: 4096 bytes -> ['node_0/_book.txt_block_48']
+  Block 49: 4096 bytes -> ['node_1/_book.txt_block_49']
+  Block 50: 4096 bytes -> ['node_1/_book.txt_block_50']
+  Block 51: 4096 bytes -> ['node_0/_book.txt_block_51']
+  Block 52: 4096 bytes -> ['node_0/_book.txt_block_52']
+  Block 53: 4096 bytes -> ['node_0/_book.txt_block_53']
+  Block 54: 4096 bytes -> ['node_0/_book.txt_block_54']
+  Block 55: 4096 bytes -> ['node_0/_book.txt_block_55']
+  Block 56: 4096 bytes -> ['node_0/_book.txt_block_56']
+  Block 57: 4096 bytes -> ['node_0/_book.txt_block_57']
+  Block 58: 4096 bytes -> ['node_0/_book.txt_block_58']
+  Block 59: 4096 bytes -> ['node_1/_book.txt_block_59']
+  Block 60: 4096 bytes -> ['node_0/_book.txt_block_60']
+  Block 61: 4096 bytes -> ['node_1/_book.txt_block_61']
+  Block 62: 4096 bytes -> ['node_0/_book.txt_block_62']
+  Block 63: 4096 bytes -> ['node_1/_book.txt_block_63']
+  Block 64: 4096 bytes -> ['node_0/_book.txt_block_64']
+  Block 65: 4096 bytes -> ['node_1/_book.txt_block_65']
+  Block 66: 4096 bytes -> ['node_0/_book.txt_block_66']
+  Block 67: 4096 bytes -> ['node_0/_book.txt_block_67']
+  Block 68: 4096 bytes -> ['node_0/_book.txt_block_68']
+  Block 69: 4096 bytes -> ['node_0/_book.txt_block_69']
+  Block 70: 4096 bytes -> ['node_1/_book.txt_block_70']
+  Block 71: 4096 bytes -> ['node_0/_book.txt_block_71']
+  Block 72: 4096 bytes -> ['node_0/_book.txt_block_72']
+  Block 73: 4096 bytes -> ['node_0/_book.txt_block_73']
+  Block 74: 4096 bytes -> ['node_1/_book.txt_block_74']
+  Block 75: 4096 bytes -> ['node_1/_book.txt_block_75']
+  Block 76: 4096 bytes -> ['node_0/_book.txt_block_76']
+  Block 77: 4096 bytes -> ['node_1/_book.txt_block_77']
+  Block 78: 4096 bytes -> ['node_1/_book.txt_block_78']
+  Block 79: 4096 bytes -> ['node_1/_book.txt_block_79']
+  Block 80: 4096 bytes -> ['node_1/_book.txt_block_80']
+  Block 81: 4096 bytes -> ['node_0/_book.txt_block_81']
+  Block 82: 4096 bytes -> ['node_1/_book.txt_block_82']
+  Block 83: 4096 bytes -> ['node_1/_book.txt_block_83']
+  Block 84: 4096 bytes -> ['node_0/_book.txt_block_84']
+  Block 85: 4096 bytes -> ['node_0/_book.txt_block_85']
+  Block 86: 4096 bytes -> ['node_1/_book.txt_block_86']
+  Block 87: 4096 bytes -> ['node_1/_book.txt_block_87']
+  Block 88: 4096 bytes -> ['node_0/_book.txt_block_88']
+  Block 89: 4096 bytes -> ['node_1/_book.txt_block_89']
+  Block 90: 4096 bytes -> ['node_1/_book.txt_block_90']
+  Block 91: 4096 bytes -> ['node_1/_book.txt_block_91']
+  Block 92: 4096 bytes -> ['node_1/_book.txt_block_92']
+  Block 93: 4096 bytes -> ['node_1/_book.txt_block_93']
+  Block 94: 4096 bytes -> ['node_1/_book.txt_block_94']
+  Block 95: 4096 bytes -> ['node_1/_book.txt_block_95']
+  Block 96: 4096 bytes -> ['node_1/_book.txt_block_96']
+  Block 97: 4096 bytes -> ['node_1/_book.txt_block_97']
+  Block 98: 4096 bytes -> ['node_0/_book.txt_block_98']
+  Block 99: 4096 bytes -> ['node_0/_book.txt_block_99']
+  Block 100: 4096 bytes -> ['node_1/_book.txt_block_100']
+  Block 101: 4096 bytes -> ['node_0/_book.txt_block_101']
+  Block 102: 4096 bytes -> ['node_0/_book.txt_block_102']
+  Block 103: 4096 bytes -> ['node_0/_book.txt_block_103']
+  Block 104: 4096 bytes -> ['node_1/_book.txt_block_104']
+  Block 105: 4096 bytes -> ['node_1/_book.txt_block_105']
+  Block 106: 4096 bytes -> ['node_0/_book.txt_block_106']
+  Block 107: 4096 bytes -> ['node_0/_book.txt_block_107']
+  Block 108: 4096 bytes -> ['node_1/_book.txt_block_108']
+  Block 109: 4096 bytes -> ['node_1/_book.txt_block_109']
+  Block 110: 4096 bytes -> ['node_0/_book.txt_block_110']
+  Block 111: 4096 bytes -> ['node_1/_book.txt_block_111']
+  Block 112: 4096 bytes -> ['node_1/_book.txt_block_112']
+  Block 113: 4096 bytes -> ['node_0/_book.txt_block_113']
+  Block 114: 4096 bytes -> ['node_0/_book.txt_block_114']
+  Block 115: 4096 bytes -> ['node_0/_book.txt_block_115']
+  Block 116: 4096 bytes -> ['node_0/_book.txt_block_116']
+  Block 117: 4096 bytes -> ['node_1/_book.txt_block_117']
+  Block 118: 4096 bytes -> ['node_0/_book.txt_block_118']
+  Block 119: 4096 bytes -> ['node_0/_book.txt_block_119']
+  Block 120: 4096 bytes -> ['node_0/_book.txt_block_120']
+  Block 121: 4096 bytes -> ['node_1/_book.txt_block_121']
+  Block 122: 4096 bytes -> ['node_0/_book.txt_block_122']
+  Block 123: 4096 bytes -> ['node_0/_book.txt_block_123']
+  Block 124: 4096 bytes -> ['node_0/_book.txt_block_124']
+  Block 125: 4096 bytes -> ['node_1/_book.txt_block_125']
+  Block 126: 4096 bytes -> ['node_0/_book.txt_block_126']
+  Block 127: 4096 bytes -> ['node_1/_book.txt_block_127']
+  Block 128: 4096 bytes -> ['node_1/_book.txt_block_128']
+  Block 129: 4096 bytes -> ['node_0/_book.txt_block_129']
+  Block 130: 4096 bytes -> ['node_1/_book.txt_block_130']
+  Block 131: 4096 bytes -> ['node_0/_book.txt_block_131']
+  Block 132: 4096 bytes -> ['node_1/_book.txt_block_132']
+  Block 133: 4096 bytes -> ['node_0/_book.txt_block_133']
+  Block 134: 4096 bytes -> ['node_1/_book.txt_block_134']
+  Block 135: 4096 bytes -> ['node_1/_book.txt_block_135']
+  Block 136: 4096 bytes -> ['node_1/_book.txt_block_136']
+  Block 137: 4096 bytes -> ['node_1/_book.txt_block_137']
+  Block 138: 4096 bytes -> ['node_0/_book.txt_block_138']
+  Block 139: 4096 bytes -> ['node_0/_book.txt_block_139']
+  Block 140: 4096 bytes -> ['node_1/_book.txt_block_140']
+  Block 141: 4096 bytes -> ['node_1/_book.txt_block_141']
+  Block 142: 4096 bytes -> ['node_0/_book.txt_block_142']
+  Block 143: 4096 bytes -> ['node_0/_book.txt_block_143']
+  Block 144: 4096 bytes -> ['node_1/_book.txt_block_144']
+  Block 145: 4096 bytes -> ['node_1/_book.txt_block_145']
+  Block 146: 4096 bytes -> ['node_1/_book.txt_block_146']
+  Block 147: 4096 bytes -> ['node_1/_book.txt_block_147']
+  Block 148: 4096 bytes -> ['node_0/_book.txt_block_148']
+  Block 149: 4096 bytes -> ['node_0/_book.txt_block_149']
+  Block 150: 4096 bytes -> ['node_1/_book.txt_block_150']
+  Block 151: 4096 bytes -> ['node_0/_book.txt_block_151']
+  Block 152: 4096 bytes -> ['node_1/_book.txt_block_152']
+  Block 153: 4096 bytes -> ['node_1/_book.txt_block_153']
+  Block 154: 4096 bytes -> ['node_1/_book.txt_block_154']
+  Block 155: 4096 bytes -> ['node_0/_book.txt_block_155']
+  Block 156: 4096 bytes -> ['node_0/_book.txt_block_156']
+  Block 157: 4096 bytes -> ['node_0/_book.txt_block_157']
+  Block 158: 4096 bytes -> ['node_1/_book.txt_block_158']
+  Block 159: 4096 bytes -> ['node_1/_book.txt_block_159']
+  Block 160: 4096 bytes -> ['node_1/_book.txt_block_160']
+  Block 161: 4096 bytes -> ['node_1/_book.txt_block_161']
+  Block 162: 4096 bytes -> ['node_0/_book.txt_block_162']
+  Block 163: 4096 bytes -> ['node_0/_book.txt_block_163']
+  Block 164: 4096 bytes -> ['node_0/_book.txt_block_164']
+  Block 165: 4096 bytes -> ['node_0/_book.txt_block_165']
+  Block 166: 4096 bytes -> ['node_1/_book.txt_block_166']
+  Block 167: 4096 bytes -> ['node_1/_book.txt_block_167']
+  Block 168: 4096 bytes -> ['node_0/_book.txt_block_168']
+  Block 169: 4096 bytes -> ['node_1/_book.txt_block_169']
+  Block 170: 4096 bytes -> ['node_1/_book.txt_block_170']
+  Block 171: 4096 bytes -> ['node_1/_book.txt_block_171']
+  Block 172: 4096 bytes -> ['node_1/_book.txt_block_172']
+  Block 173: 4096 bytes -> ['node_0/_book.txt_block_173']
+  Block 174: 4096 bytes -> ['node_1/_book.txt_block_174']
+  Block 175: 4096 bytes -> ['node_1/_book.txt_block_175']
+  Block 176: 4096 bytes -> ['node_0/_book.txt_block_176']
+  Block 177: 4096 bytes -> ['node_1/_book.txt_block_177']
+  Block 178: 4096 bytes -> ['node_0/_book.txt_block_178']
+  Block 179: 4096 bytes -> ['node_1/_book.txt_block_179']
+  Block 180: 4096 bytes -> ['node_1/_book.txt_block_180']
+  Block 181: 4096 bytes -> ['node_1/_book.txt_block_181']
+  Block 182: 2453 bytes -> ['node_1/_book.txt_block_182']
+[HDFS] Upload complete: 183 blocks, 747925 bytes
+
+======================================================================
+DISTRIBUTED MAPREDUCE WITH SIMULATED HDFS
+======================================================================
+
+[HDFS] Reading file: /book.txt
+[HDFS] File has 183 blocks
+
+[HDFS] Reading blocks from distributed nodes...
+  Progress: 50/183 blocks read (27.3%)
+  Progress: 100/183 blocks read (54.6%)
+  Progress: 150/183 blocks read (82.0%)
+  Progress: 183/183 blocks read (100.0%)
+
+[HDFS] Decoding content...
+[HDFS] Total lines read: 11992
+
+
+============================================================
+PARALLEL MAPREDUCE EXECUTION
+============================================================
+Input records: 11992
+Map tasks: 2
+Reduce tasks: 2
+============================================================
+
+[PHASE 1] MAP - Parallel Execution
+  [Map Task 0] Produced 62573 key-value pairs
+  [Map Task 1] Produced 59572 key-value pairs
+  Total: 11992 records -> 122145 key-value pairs
+  Time: 0.149s
+
+[PHASE 2] SHUFFLE & SORT
+  Grouped into 13696 unique keys
+  Partitioned across 2 reducers
+  Time: 0.023s
+
+[PHASE 3] REDUCE - Parallel Execution
+  [Reduce Task 0] Produced 6848 results
+  [Reduce Task 1] Produced 6848 results
+  Total: 13696 final results
+  Time: 0.092s
+
+============================================================
+EXECUTION SUMMARY
+============================================================
+Map phase:     0.149s (56.5%)
+Shuffle phase: 0.023s (8.6%)
+Reduce phase:  0.092s (34.9%)
+Total time:    0.263s
+============================================================
+
+P.2 block=4096 bytes; blocks=183; upload=0.015291s; processing=0.285304s; total=0.300599s; unique_words=13696
+
+[HDFS] Uploading /workspaces/bigdata-101/datasets/book/The story of the universe.txt to /book.txt
+  Block 0: 16384 bytes -> ['node_1/_book.txt_block_0']
+  Block 1: 16384 bytes -> ['node_1/_book.txt_block_1']
+  Block 2: 16384 bytes -> ['node_1/_book.txt_block_2']
+  Block 3: 16384 bytes -> ['node_1/_book.txt_block_3']
+  Block 4: 16384 bytes -> ['node_0/_book.txt_block_4']
+  Block 5: 16384 bytes -> ['node_1/_book.txt_block_5']
+  Block 6: 16384 bytes -> ['node_0/_book.txt_block_6']
+  Block 7: 16384 bytes -> ['node_1/_book.txt_block_7']
+  Block 8: 16384 bytes -> ['node_0/_book.txt_block_8']
+  Block 9: 16384 bytes -> ['node_1/_book.txt_block_9']
+  Block 10: 16384 bytes -> ['node_0/_book.txt_block_10']
+  Block 11: 16384 bytes -> ['node_0/_book.txt_block_11']
+  Block 12: 16384 bytes -> ['node_0/_book.txt_block_12']
+  Block 13: 16384 bytes -> ['node_1/_book.txt_block_13']
+  Block 14: 16384 bytes -> ['node_0/_book.txt_block_14']
+  Block 15: 16384 bytes -> ['node_0/_book.txt_block_15']
+  Block 16: 16384 bytes -> ['node_1/_book.txt_block_16']
+  Block 17: 16384 bytes -> ['node_0/_book.txt_block_17']
+  Block 18: 16384 bytes -> ['node_1/_book.txt_block_18']
+  Block 19: 16384 bytes -> ['node_1/_book.txt_block_19']
+  Block 20: 16384 bytes -> ['node_1/_book.txt_block_20']
+  Block 21: 16384 bytes -> ['node_0/_book.txt_block_21']
+  Block 22: 16384 bytes -> ['node_0/_book.txt_block_22']
+  Block 23: 16384 bytes -> ['node_1/_book.txt_block_23']
+  Block 24: 16384 bytes -> ['node_1/_book.txt_block_24']
+  Block 25: 16384 bytes -> ['node_1/_book.txt_block_25']
+  Block 26: 16384 bytes -> ['node_0/_book.txt_block_26']
+  Block 27: 16384 bytes -> ['node_0/_book.txt_block_27']
+  Block 28: 16384 bytes -> ['node_1/_book.txt_block_28']
+  Block 29: 16384 bytes -> ['node_1/_book.txt_block_29']
+  Block 30: 16384 bytes -> ['node_0/_book.txt_block_30']
+  Block 31: 16384 bytes -> ['node_0/_book.txt_block_31']
+  Block 32: 16384 bytes -> ['node_0/_book.txt_block_32']
+  Block 33: 16384 bytes -> ['node_0/_book.txt_block_33']
+  Block 34: 16384 bytes -> ['node_0/_book.txt_block_34']
+  Block 35: 16384 bytes -> ['node_0/_book.txt_block_35']
+  Block 36: 16384 bytes -> ['node_0/_book.txt_block_36']
+  Block 37: 16384 bytes -> ['node_0/_book.txt_block_37']
+  Block 38: 16384 bytes -> ['node_0/_book.txt_block_38']
+  Block 39: 16384 bytes -> ['node_1/_book.txt_block_39']
+  Block 40: 16384 bytes -> ['node_1/_book.txt_block_40']
+  Block 41: 16384 bytes -> ['node_0/_book.txt_block_41']
+  Block 42: 16384 bytes -> ['node_1/_book.txt_block_42']
+  Block 43: 16384 bytes -> ['node_0/_book.txt_block_43']
+  Block 44: 16384 bytes -> ['node_0/_book.txt_block_44']
+  Block 45: 10645 bytes -> ['node_0/_book.txt_block_45']
+[HDFS] Upload complete: 46 blocks, 747925 bytes
+
+======================================================================
+DISTRIBUTED MAPREDUCE WITH SIMULATED HDFS
+======================================================================
+
+[HDFS] Reading file: /book.txt
+[HDFS] File has 46 blocks
+
+[HDFS] Reading blocks from distributed nodes...
+  Progress: 46/46 blocks read (100.0%)
+
+[HDFS] Decoding content...
+[HDFS] Total lines read: 11992
+
+
+============================================================
+PARALLEL MAPREDUCE EXECUTION
+============================================================
+Input records: 11992
+Map tasks: 2
+Reduce tasks: 2
+============================================================
+
+[PHASE 1] MAP - Parallel Execution
+  [Map Task 0] Produced 62573 key-value pairs
+  [Map Task 1] Produced 59572 key-value pairs
+  Total: 11992 records -> 122145 key-value pairs
+  Time: 0.152s
+
+[PHASE 2] SHUFFLE & SORT
+  Grouped into 13696 unique keys
+  Partitioned across 2 reducers
+  Time: 0.019s
+
+[PHASE 3] REDUCE - Parallel Execution
+  [Reduce Task 0] Produced 6848 results
+  [Reduce Task 1] Produced 6848 results
+  Total: 13696 final results
+  Time: 0.085s
+
+============================================================
+EXECUTION SUMMARY
+============================================================
+Map phase:     0.152s (59.4%)
+Shuffle phase: 0.019s (7.5%)
+Reduce phase:  0.085s (33.1%)
+Total time:    0.255s
+============================================================
+
+P.2 block=16384 bytes; blocks=46; upload=0.004870s; processing=0.270320s; total=0.275194s; unique_words=13696
+
+[HDFS] Uploading /workspaces/bigdata-101/datasets/book/The story of the universe.txt to /book.txt
+  Block 0: 65536 bytes -> ['node_1/_book.txt_block_0']
+  Block 1: 65536 bytes -> ['node_1/_book.txt_block_1']
+  Block 2: 65536 bytes -> ['node_1/_book.txt_block_2']
+  Block 3: 65536 bytes -> ['node_1/_book.txt_block_3']
+  Block 4: 65536 bytes -> ['node_0/_book.txt_block_4']
+  Block 5: 65536 bytes -> ['node_0/_book.txt_block_5']
+  Block 6: 65536 bytes -> ['node_1/_book.txt_block_6']
+  Block 7: 65536 bytes -> ['node_0/_book.txt_block_7']
+  Block 8: 65536 bytes -> ['node_1/_book.txt_block_8']
+  Block 9: 65536 bytes -> ['node_1/_book.txt_block_9']
+  Block 10: 65536 bytes -> ['node_0/_book.txt_block_10']
+  Block 11: 27029 bytes -> ['node_1/_book.txt_block_11']
+[HDFS] Upload complete: 12 blocks, 747925 bytes
+
+======================================================================
+DISTRIBUTED MAPREDUCE WITH SIMULATED HDFS
+======================================================================
+
+[HDFS] Reading file: /book.txt
+[HDFS] File has 12 blocks
+
+[HDFS] Reading blocks from distributed nodes...
+  Progress: 12/12 blocks read (100.0%)
+
+[HDFS] Decoding content...
+[HDFS] Total lines read: 11992
+
+
+============================================================
+PARALLEL MAPREDUCE EXECUTION
+============================================================
+Input records: 11992
+Map tasks: 2
+Reduce tasks: 2
+============================================================
+
+[PHASE 1] MAP - Parallel Execution
+  [Map Task 0] Produced 62573 key-value pairs
+  [Map Task 1] Produced 59572 key-value pairs
+  Total: 11992 records -> 122145 key-value pairs
+  Time: 0.145s
+
+[PHASE 2] SHUFFLE & SORT
+  Grouped into 13696 unique keys
+  Partitioned across 2 reducers
+  Time: 0.024s
+
+[PHASE 3] REDUCE - Parallel Execution
+  [Reduce Task 0] Produced 6848 results
+  [Reduce Task 1] Produced 6848 results
+  Total: 13696 final results
+  Time: 0.114s
+
+============================================================
+EXECUTION SUMMARY
+============================================================
+Map phase:     0.145s (51.3%)
+Shuffle phase: 0.024s (8.5%)
+Reduce phase:  0.114s (40.2%)
+Total time:    0.283s
+============================================================
+
+P.2 block=65536 bytes; blocks=12; upload=0.001825s; processing=0.307005s; total=0.308833s; unique_words=13696
